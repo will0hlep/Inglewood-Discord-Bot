@@ -56,18 +56,19 @@ class variables():
         self.London = pytz.timezone('Europe/London')
         self.Amsterdam = pytz.timezone('Europe/Amsterdam')
 
-client = MyClient(intents=discord.Intents.all())
-tree = discord.app_commands.CommandTree(client)
+def main():
+    client = MyClient(intents=discord.Intents.all())
+    tree = discord.app_commands.CommandTree(client)
+    values = variables()
+    random_tiers_command_generator("random_tiers_all", "Roll a random tier", False, tree, values)
+    random_tiers_command_generator("random_tiers_iv_plus", "Roll a random tier (IV+)", True, tree, values)
+    assign_role_command_generator("assign_outings_role", "Member", "Outings", tree)
+    assign_role_command_generator("assign_gaming_plus_nmfuel_role", "Member", "Gaming+Nightmarefuel", tree)
+    toggle_role_command_generator("toggle_ark_role", "Ark Server", tree)
+    toggle_role_command_generator("toggle_minecraft_role", "Minecraft Server", tree)
+    toggle_role_command_generator("toggle_free_games_role", "Free Games", tree)
+    toggle_role_command_generator("toggle_archive_role", "Archive", tree)
+    client.run(token)
+    return None
 
-values = variables()
-
-random_tiers_command_generator("random_tiers_all", "Roll a random tier", False, tree, values)
-random_tiers_command_generator("random_tiers_iv_plus", "Roll a random tier (IV+)", True, tree, values)
-assign_role_command_generator("assign_outings_role", "Member", "Outings", tree)
-assign_role_command_generator("assign_gaming_plus_nmfuel_role", "Member", "Gaming+Nightmarefuel", tree)
-toggle_role_command_generator("toggle_ark_role", "Ark Server", tree)
-toggle_role_command_generator("toggle_minecraft_role", "Minecraft Server", tree)
-toggle_role_command_generator("toggle_free_games_role", "Free Games", tree)
-toggle_role_command_generator("toggle_archive_role", "Archive", tree)
-
-client.run(token)
+main()
