@@ -2,7 +2,6 @@ import socket
 from mcstatus import JavaServer, BedrockServer
 from decorators import retry
 
-
 def server_status_check(server, domain, port, bed_port = None, fail_over_ver = None):
     string = f'**{server}**\n'
     try:
@@ -21,7 +20,6 @@ def server_status_check(server, domain, port, bed_port = None, fail_over_ver = N
             string += f'Bedrock: Unavailable\n'
     string += '\n'
     return string
-
 
 @retry(5, f'Java: Unavailable\n')
 def legacy_server_status_check(server, domain, port, fail_over_ver):
