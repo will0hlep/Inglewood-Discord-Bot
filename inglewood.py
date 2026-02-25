@@ -53,10 +53,13 @@ class MyClient(discord.Client):
                 fail_over_ver = FAIL_OVER_VER)
             current_time = datetime.datetime.now(TIME_ZONE)
             server_msg += f'Last Updated: {current_time}'
-            channel = self.get_channel(CHANNEL_ID)
-            message = await channel.fetch_message(MESSAGE_ID)
-            await message.edit(content=server_msg)
-            print('server message updated')
+            try:
+                channel = self.get_channel(CHANNEL_ID)
+                message = await channel.fetch_message(MESSAGE_ID)
+                await message.edit(content=server_msg)
+                print('server message updated')
+            except discord.HTTPException:
+                pass
             await asyncio.sleep(SERVER_MSG_PERIOD)
 
     async def daily_tier_roll_reset(self) -> None:
