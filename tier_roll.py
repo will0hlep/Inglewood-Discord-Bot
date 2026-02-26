@@ -4,12 +4,11 @@ generation
 """
 
 import random
-from collections.abc import Callable
 
 import discord
 
 from wot_time import get_timestamp
-from constants import (SERVER_ID, LOW_TIER_BLOCK_BEFORE, LOW_TIER_BLOCK_AFTER)
+from constants import LOW_TIER_BLOCK_BEFORE, LOW_TIER_BLOCK_AFTER
 
 
 def tier_roll(client: discord.Client, battle_pass: bool) -> str:
@@ -64,34 +63,3 @@ def tier_roll(client: discord.Client, battle_pass: bool) -> str:
         else:
             draw += ' Double Preferential'
     return draw
-
-
-def random_tiers_command_generator(
-        client: discord.Client, command_name: str, command_description: str,
-        battle_pass: bool) -> Callable:
-    """
-    Builds discord commands to allow users to role random tiers.
-
-    Parameters:
-        command_name : str
-            the name of the command as it will appear in Discord
-        command_description : str
-            the description of the command as it will appear in Discord
-        battle_pass: bool
-            if True, command will only select from tier IV and up
-        tree: object
-            The command tree responsible for handling the application
-            commands in this bot
-    """
-    @client.tree.command(
-            name = command_name, description = command_description,
-            guild=discord.Object(id=SERVER_ID))
-    @discord.app_commands.describe()
-    async def func(interaction: object) -> None:
-        await interaction.response.defer()
-        draw = tier_roll(client, battle_pass)
-        await interaction.followup.send(draw)
-        print(f"{command_name} command rolled {draw} for "
-              f"{interaction.user.name}")
-        return None
-    return None
