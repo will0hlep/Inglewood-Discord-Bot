@@ -1,6 +1,7 @@
 """
 This module implements a check for changes in the bots code, allowing 
 """
+
 import os
 import pathlib
 import hashlib

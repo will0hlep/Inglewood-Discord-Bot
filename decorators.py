@@ -2,6 +2,7 @@
 This module implements a retry decorator for use with the
 legacy_server_status_check function.
 """
+
 from collections.abc import Callable
 
 
