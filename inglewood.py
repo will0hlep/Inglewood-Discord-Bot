@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 import discord
 
+from hash_check import hash_check
 from server_status_check import server_status_check
 from assign_roles import (toggle_role_command_generator,
     assign_role_command_generator)
@@ -23,7 +24,6 @@ class MyClient(discord.Client):
     Represents a client connection that connects to Discord.
     This class is used to interact with the Discord WebSocket and API.
     """
-
     async def setup_hook(self) -> None:
         """     
         Syncs the application commands to the Discord guild (server) and
@@ -31,7 +31,9 @@ class MyClient(discord.Client):
         after the bot is logged in but before it has connected to the
         Websocket.
         """
-        await tree.sync(guild=discord.Object(SERVER_ID))
+        if hash_check():
+            await tree.sync(guild=discord.Object(SERVER_ID))
+            print('command tree updated')
         self.loop.create_task(self.game_servers_messages_update_loop())
         self.loop.create_task(self.daily_tier_roll_reset())
         return None
