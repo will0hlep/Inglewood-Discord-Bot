@@ -3,7 +3,6 @@ This module implements the inglewood discord bot.
 """
 
 import asyncio
-import datetime
 from collections.abc import Callable
 
 import discord
@@ -15,7 +14,7 @@ from tier_roll import tier_roll
 from wot_time import get_timestamp
 from constants import (DOMAIN, SUR_PORT, SUR_BED, RED_PORT, RED_BED, ADV_PORT,
     FAIL_OVER_VER, TOKEN, SERVER_ID, CHANNEL_ID, MESSAGE_ID, SERVER_MSG_PERIOD,
-    DAILY_TIER_RESET_TIME, TIME_ZONE)
+    DAILY_TIER_RESET_TIME)
 
 
 class Inglewood(discord.Client):
@@ -65,6 +64,9 @@ class Inglewood(discord.Client):
         address information of all three Minecraft servers
         """
         await self.wait_until_ready()
+        channel = self.get_channel(CHANNEL_ID)
+        message = await channel.fetch_message(MESSAGE_ID)
+        current_server_msg = message.content
         while True:
             server_msg = server_status_check(
                 "Survival Server", DOMAIN, SUR_PORT, bed_port = SUR_BED)
@@ -73,15 +75,13 @@ class Inglewood(discord.Client):
             server_msg += server_status_check(
                 "Adventure Server", DOMAIN, ADV_PORT,
                 fail_over_ver = FAIL_OVER_VER)
-            current_time = datetime.datetime.now(TIME_ZONE)
-            server_msg += f'Last Updated: {current_time}'
-            try:
-                channel = self.get_channel(CHANNEL_ID)
-                message = await channel.fetch_message(MESSAGE_ID)
-                await message.edit(content=server_msg)
-                print('server message updated')
-            except discord.HTTPException:
-                pass
+            if current_server_msg != server_msg:
+                try:
+                    await message.edit(content=server_msg)
+                    current_server_msg = server_msg
+                    print('server message updated')
+                except discord.HTTPException:
+                    pass
             await asyncio.sleep(SERVER_MSG_PERIOD)
 
     async def daily_tier_roll_reset(self) -> None:
