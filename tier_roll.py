@@ -12,7 +12,7 @@ from wot_time import get_timestamp
 from constants import (SERVER_ID, LOW_TIER_BLOCK_BEFORE, LOW_TIER_BLOCK_AFTER)
 
 
-def tier_roll(battle_pass: bool, values: object) -> str:
+def tier_roll(client: discord.Client, battle_pass: bool) -> str:
     """
     Chooses a random tier (from I to XI or Wildcard) without repeats.
     Tier I will only be selected at most once per day. Tier I to III
@@ -46,16 +46,16 @@ def tier_roll(battle_pass: bool, values: object) -> str:
         tiers.remove('I')
         tiers.remove('II')
         tiers.remove('III')
-    elif values.tier1:
+    elif client.tier1:
         tiers.remove('I')
-    if values.last in tiers:
-        tiers.remove(values.last)
-        if values.last in tiers:
-            tiers.remove(values.last)
+    if client.last in tiers:
+        tiers.remove(client.last)
+        if client.last in tiers:
+            tiers.remove(client.last)
     draw = random.choice(tiers)
-    values.last = draw
+    client.last = draw
     if draw == 'I':
-        values.tier1 = True
+        client.tier1 = True
     elif draw in ['II','V','VI','VII','VIII'] and random.randint(1, 30) == 1:
         draw += ' Preferential'
     elif draw in ['IV'] and random.randint(1, 30) == 1:
@@ -67,8 +67,8 @@ def tier_roll(battle_pass: bool, values: object) -> str:
 
 
 def random_tiers_command_generator(
-        command_name: str, command_description: str, battle_pass: bool,
-        tree: object, values: object) -> Callable:
+        client: discord.Client, command_name: str, command_description: str,
+        battle_pass: bool) -> Callable:
     """
     Builds discord commands to allow users to role random tiers.
 
@@ -83,13 +83,13 @@ def random_tiers_command_generator(
             The command tree responsible for handling the application
             commands in this bot
     """
-    @tree.command(
+    @client.tree.command(
             name = command_name, description = command_description,
             guild=discord.Object(id=SERVER_ID))
     @discord.app_commands.describe()
     async def func(interaction: object) -> None:
         await interaction.response.defer()
-        draw = tier_roll(battle_pass, values)
+        draw = tier_roll(client, battle_pass)
         await interaction.followup.send(draw)
         print(f"{command_name} command rolled {draw} for "
               f"{interaction.user.name}")

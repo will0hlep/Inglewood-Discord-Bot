@@ -86,7 +86,7 @@ async def toggle_role_message_send(
 
 
 def toggle_role_command_generator(
-        command_name: str, role_name: str, tree: object) -> Callable:
+        client: discord.Client, command_name: str, role_name: str) -> Callable:
     """
     Builds discord commands to allow users to toggle roles.
 
@@ -99,7 +99,7 @@ def toggle_role_command_generator(
             The command tree responsible for handling the application
             commands in this bot
     """
-    @tree.command(
+    @client.tree.command(
         name = command_name, description = f"Toggle {role_name} role.",
         guild = discord.Object(id=SERVER_ID))
     @discord.app_commands.describe()
@@ -112,8 +112,8 @@ def toggle_role_command_generator(
 
 
 def assign_role_command_generator(
-        command_name: str, required_role: str, role_name: str,
-        tree: object) -> Callable:
+        client: discord.Client, command_name: str, required_role: str,
+        role_name: str) -> Callable:
     """
     Builds discord commands to allow users to assign roles to other
     users.
@@ -129,7 +129,7 @@ def assign_role_command_generator(
             The command tree responsible for handling the application
             commands in this bot
     """
-    @tree.command(name = command_name,
+    @client.tree.command(name = command_name,
                   description = f"Assign {role_name} role.",
                   guild=discord.Object(id=SERVER_ID))
     @discord.app_commands.describe(

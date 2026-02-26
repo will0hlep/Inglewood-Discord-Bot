@@ -4,7 +4,6 @@ This module implements the inglewood discord bot.
 
 import asyncio
 import datetime
-from dataclasses import dataclass
 
 import discord
 
@@ -24,6 +23,13 @@ class MyClient(discord.Client):
     Represents a client connection that connects to Discord.
     This class is used to interact with the Discord WebSocket and API.
     """
+    def __init__(self, *, intents: discord.Intents):
+        super().__init__(intents=intents)
+        self.last = None
+        self.tier1 = False
+        self.tree = discord.app_commands.CommandTree(self)
+
+
     async def setup_hook(self) -> None:
         """     
         Syncs the application commands to the Discord guild (server) and
@@ -32,7 +38,7 @@ class MyClient(discord.Client):
         Websocket.
         """
         if hash_check():
-            await tree.sync(guild=discord.Object(SERVER_ID))
+            await self.tree.sync(guild=discord.Object(SERVER_ID))
             print('command tree updated')
         self.loop.create_task(self.game_servers_messages_update_loop())
         self.loop.create_task(self.daily_tier_roll_reset())
@@ -75,39 +81,23 @@ class MyClient(discord.Client):
             if time <= 0:
                 time += 24*60*60
             await asyncio.sleep(time)
-            values.last = None
-            values.tier1 = False
+            self.last = None
+            self.tier1 = False
             print('reset daily tier roll variables')
 
 
-@dataclass
-class Variables():
-    """
-    A class containing frequently used non constant variables.
-
-    Attributes:
-        last : str
-            the most recently draw tier
-        tier1 : bool
-            True if tier I has been already drawn today
-    """
-    last: str | None = 1
-    tier1: bool = False
-
-
 client = MyClient(intents=discord.Intents.all())
-tree = discord.app_commands.CommandTree(client)
-values = Variables()
 random_tiers_command_generator(
-    "random_tiers_all", "Roll a random tier", False, tree, values)
+    client, "random_tiers_all", "Roll a random tier", False)
 random_tiers_command_generator(
-    "random_tiers_iv_plus", "Roll a random tier (IV+)", True, tree, values)
-assign_role_command_generator("assign_outings_role", "Member", "Outings", tree)
+    client, "random_tiers_iv_plus", "Roll a random tier (IV+)", True)
 assign_role_command_generator(
-    "assign_gaming_plus_nmfuel_role", "Member", "Gaming+Nightmarefuel", tree)
-toggle_role_command_generator("toggle_ark_role", "Ark Server", tree)
+    client, "assign_outings_role", "Member", "Outings")
+assign_role_command_generator(
+    client, "assign_gaming_plus_nmfuel_role", "Member", "Gaming+Nightmarefuel")
+toggle_role_command_generator(client, "toggle_ark_role", "Ark Server")
 toggle_role_command_generator(
-    "toggle_minecraft_role", "Minecraft Server", tree)
-toggle_role_command_generator("toggle_free_games_role", "Free Games", tree)
-toggle_role_command_generator("toggle_archive_role", "Archive", tree)
+    client, "toggle_minecraft_role", "Minecraft Server")
+toggle_role_command_generator(client, "toggle_free_games_role", "Free Games")
+toggle_role_command_generator(client, "toggle_archive_role", "Archive")
 client.run(TOKEN)
