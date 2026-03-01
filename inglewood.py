@@ -12,9 +12,9 @@ from server_status_check import server_status_check
 from assign_roles import toggle_role_message_send
 from tier_roll import tier_roll
 from wot_time import get_timestamp
-from constants import (DOMAIN, SUR_PORT, SUR_BED, RED_PORT, RED_BED, ADV_PORT,
-    FAIL_OVER_VER, TOKEN, SERVER_ID, CHANNEL_ID, MESSAGE_ID, SERVER_MSG_PERIOD,
-    DAILY_TIER_RESET_TIME)
+from constants import (
+    TOKEN, SERVER_ID, CHANNEL_ID, MESSAGE_ID, DOMAIN, MINECRAFT_SERVERS,
+    SERVER_MSG_PERIOD, DAILY_TIER_RESET_TIME)
 
 
 class Inglewood(discord.Client):
@@ -68,13 +68,10 @@ class Inglewood(discord.Client):
         message = await channel.fetch_message(MESSAGE_ID)
         current_server_msg = message.content
         while True:
-            server_msg = server_status_check(
-                "Survival Server", DOMAIN, SUR_PORT, bed_port = SUR_BED)
-            server_msg += server_status_check(
-                "Redstone Server", DOMAIN, RED_PORT, bed_port = RED_BED)
-            server_msg += server_status_check(
-                "Adventure Server", DOMAIN, ADV_PORT,
-                fail_over_ver = FAIL_OVER_VER)
+            server_msg = ''
+            for server, ports in MINECRAFT_SERVERS.items():
+                server_msg += server_status_check(
+                    server, DOMAIN, ports)
             if current_server_msg != server_msg:
                 try:
                     await message.edit(content=server_msg)

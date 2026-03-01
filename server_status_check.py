@@ -4,14 +4,13 @@ This module implements game server related status checks.
 
 import socket
 
-from mcstatus import JavaServer, BedrockServer
+from mcstatus import LegacyServer #remove on release of mcstatus 13
 
 from decorators import retry
 
 
 def server_status_check(
-        server_name: str, domain: str, port: int, bed_port: int | None = None,
-        fail_over_ver: str | None = None) -> str:
+        server_name: str, domain: str, ports: list) -> str:
     """
     Performs status checks on Minecraft servers and returns a status
     string.
@@ -21,33 +20,32 @@ def server_status_check(
             the name of the Minecraft server
         domain : str
             the domain or IP address
-        port: int
-            the game port
-        bed_port : int | None
-            the geyser game port
-        fail_over_ver : str | None
-            the java version number of the server 
+        ports: int
+            the game ports
     Returns:
-        string : str
-            status string describing online status and web address
+        server_msg : str
+            status information describing online status and web address
     """
-    string = f'**{server_name}**\n'
-    try:
-        jarversion = JavaServer.lookup(f"{domain}:{port}").status().version.name
-        string += f'Java {jarversion}: {domain}:{port}\n'
-    except OSError:
-        if fail_over_ver is not None:
-            string += legacy_server_status_check(domain, port, fail_over_ver)
-        else:
-            string += 'Java: Unavailable\n'
-    if bed_port is not None:
-        try:
-            bedversion = BedrockServer.lookup(f"{domain}:{bed_port}").status().version.name
-            string += f'Bedrock {bedversion}: {domain}:{bed_port}\n'
-        except OSError:
-            string += 'Bedrock: Unavailable\n'
-    string += '\n'
-    return string
+    server_msg = f'**{server_name}**'
+    for server_type, port_dict in ports.items():
+        port = port_dict['port']
+
+        if type != LegacyServer: #remove on release of mcstatus 13
+
+            try:
+                version = server_type(domain, port).status().version.name
+                if 'Version' in port_dict:
+                    version = port_dict['Version']
+                server_msg += f'\nJava {version}: {domain}:{port}'
+            except OSError:
+                server_msg += '\nJava: Unavailable'
+
+        else:  #remove on release of mcstatus 13
+            server_msg += legacy_server_status_check( #remove on release of mcstatus 13
+                domain, port, port_dict['Version']) #remove on release of mcstatus 13
+
+    server_msg += '\n\n'
+    return server_msg
 
 
 @retry(5, 'Java: Unavailable\n')
@@ -72,5 +70,5 @@ def legacy_server_status_check(
     server.connect((domain, port))
     server.sendall(b'\xfe\x01\xfa')
     server.recv(1024)
-    string = f'Java {fail_over_ver}: {domain}:{port}\n'
+    string = f'\nJava {fail_over_ver}: {domain}:{port}'
     return string
