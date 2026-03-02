@@ -5,7 +5,7 @@ day in seconds.
 
 import datetime
 
-from constants import TIME_ZONE
+from Inglewood.constants import TIME_ZONE
 
 
 def get_timestamp() -> float:

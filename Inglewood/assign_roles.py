@@ -5,7 +5,7 @@ generation.
 
 import discord
 
-from constants import USER_ID
+from Inglewood.constants import USER_ID
 
 
 async def toggle_role(

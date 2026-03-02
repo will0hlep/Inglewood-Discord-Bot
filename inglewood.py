@@ -7,12 +7,12 @@ from collections.abc import Callable
 
 import discord
 
-from hash_check import hash_check
-from server_status_check import server_status_check
-from assign_roles import toggle_role
-from tier_roll import tier_roll
-from wot_time import get_timestamp
-from constants import (
+from Inglewood.hash_check import hash_check
+from Inglewood.server_status_check import server_status_check
+from Inglewood.assign_roles import toggle_role
+from Inglewood.tier_roll import tier_roll
+from Inglewood.wot_time import get_timestamp
+from Inglewood.constants import (
     TOKEN, SERVER_ID, CHANNEL_ID, MESSAGE_ID, DOMAIN, MINECRAFT_SERVERS,
     SERVER_MSG_PERIOD, DAILY_TIER_RESET_TIME)
 

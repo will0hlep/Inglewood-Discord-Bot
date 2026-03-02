@@ -7,8 +7,8 @@ import random
 
 import discord
 
-from wot_time import get_timestamp
-from constants import LOW_TIER_BLOCK_BEFORE, LOW_TIER_BLOCK_AFTER
+from Inglewood.wot_time import get_timestamp
+from Inglewood.constants import LOW_TIER_BLOCK_BEFORE, LOW_TIER_BLOCK_AFTER
 
 
 def tier_roll(client: discord.Client, battle_pass: bool) -> str:

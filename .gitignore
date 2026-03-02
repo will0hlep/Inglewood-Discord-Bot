@@ -1,6 +1,6 @@
 constants.py
-discord.png
+*.png
 __pycache__
-inglewood
-pyvenv.cfg
-hash_dict.pkl
+*.cfg
+*.pkl
+.venv

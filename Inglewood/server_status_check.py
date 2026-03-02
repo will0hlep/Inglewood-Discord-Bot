@@ -6,7 +6,7 @@ import socket
 
 from mcstatus import LegacyServer #remove on release of mcstatus 13
 
-from decorators import retry
+from Inglewood.decorator import retry
 
 
 def server_status_check(
