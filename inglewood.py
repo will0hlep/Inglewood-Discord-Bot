@@ -9,7 +9,7 @@ import discord
 
 from hash_check import hash_check
 from server_status_check import server_status_check
-from assign_roles import toggle_role_message_send
+from assign_roles import toggle_role
 from tier_roll import tier_roll
 from wot_time import get_timestamp
 from constants import (
@@ -116,7 +116,7 @@ class Inglewood(discord.Client):
         @discord.app_commands.describe()
         async def func(interaction: object):
             await interaction.response.defer()
-            await toggle_role_message_send(
+            await toggle_role(
                 interaction, interaction.user, role_name, True)
 
     def assign_role_command_generator(
@@ -149,7 +149,7 @@ class Inglewood(discord.Client):
             role = discord.utils.get(interaction.guild.roles, name=required_role)
             if role in interaction.user.roles:
                 user = interaction.guild.get_member_named(username)
-                await toggle_role_message_send(interaction, user, role_name, False)
+                await toggle_role(interaction, user, role_name, False)
             else:
                 print(f'you do not have permission to assign the {role_name} role')
                 await interaction.followup.send((
