@@ -29,9 +29,7 @@ def server_status_check(
     server_msg = f'**{server_name}**'
     for server_type, port_dict in ports.items():
         port = port_dict['port']
-
-        if type != LegacyServer: #remove on release of mcstatus 13
-
+        if server_type != LegacyServer: #remove on release of mcstatus 13
             try:
                 version = server_type(domain, port).status().version.name
                 if 'Version' in port_dict:
