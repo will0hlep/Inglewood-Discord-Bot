@@ -8,13 +8,13 @@ from collections.abc import Callable
 import discord
 
 from Inglewood.hash_check import hash_check
-from Inglewood.server_status_check import server_status_check
+from Inglewood.server_status_check import server_status_check, initialisation
 from Inglewood.assign_roles import toggle_role
 from Inglewood.tier_roll import tier_roll
 from Inglewood.wot_time import get_timestamp
 from Inglewood.constants import (
-    TOKEN, SERVER_ID, CHANNEL_ID, MESSAGE_ID, DOMAIN, MINECRAFT_SERVERS,
-    SERVER_MSG_PERIOD, DAILY_TIER_RESET_TIME)
+    TOKEN, SERVER_ID, CHANNEL_ID, DOMAIN, MINECRAFT_SERVERS, SERVER_MSG_PERIOD,
+    DAILY_TIER_RESET_TIME)
 
 
 class Inglewood(discord.Client):
@@ -65,14 +65,14 @@ class Inglewood(discord.Client):
         """
         await self.wait_until_ready()
         channel = self.get_channel(CHANNEL_ID)
-        message = await channel.fetch_message(MESSAGE_ID)
+        message = await initialisation(channel)
         current_server_msg = message.content
         while True:
             server_msg = ''
             for server, ports in MINECRAFT_SERVERS.items():
                 server_msg += server_status_check(
                     server, DOMAIN, ports)
-            if current_server_msg != server_msg:
+            if current_server_msg != server_msg[:-2]:
                 try:
                     await message.edit(content=server_msg)
                     current_server_msg = server_msg

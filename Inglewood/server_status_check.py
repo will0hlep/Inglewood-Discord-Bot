@@ -3,8 +3,11 @@ This module implements game server related status checks.
 """
 
 import socket
+import pickle
+import os
 
 from mcstatus import LegacyServer #remove on release of mcstatus 13
+import discord
 
 from Inglewood.decorator import retry
 
@@ -44,6 +47,29 @@ def server_status_check(
 
     server_msg += '\n\n'
     return server_msg
+
+
+async def initialisation(channel):
+    if os.path.exists('message_id.pkl'):
+        with open('message_id.pkl', 'rb') as f:
+            message_id = pickle.load(f)
+        try:
+            message = await channel.fetch_message(message_id)
+        except discord.errors.NotFound:
+            os.remove('message_id.pkl')
+            message = await initialisation_message(channel)
+    else:
+        message = await initialisation_message(channel)
+    return message
+
+
+async def initialisation_message(channel):
+    message = await channel.send('placeholder')
+    await message.pin()
+    message_id = message.id
+    with open('message_id.pkl', 'wb') as f:
+        pickle.dump(message_id, f)
+    return message
 
 
 @retry(5, 'Java: Unavailable\n')
