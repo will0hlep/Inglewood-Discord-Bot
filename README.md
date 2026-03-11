@@ -11,7 +11,7 @@ A python discord designed to run in a docker container.
 
 ## Quick Start
 
-In order to start the bot, download the `Dockerfile`and all `.py` files. Then put them in a directory of your choosing. Next create a `constants.py` file.
+In order to start the bot, download the `Dockerfile`and `inglewood.py` files. Then put them in a directory of your choosing. Next create a `constants.py` file.
 
 ### constants.py
 
@@ -27,7 +27,6 @@ Then add the following constants:
 - `TOKEN` which is your bot's discord api token as a string
 - `SERVER_ID` which is your discord server's ID as an integer
 - `CHANNEL_ID` which is the ID of the discord channel containing the minecraft server status message  as an integer
-- `MESSAGE_ID` which is the ID of the minecraft server status message as an integer
 - `USER_ID` which is your discord user ID as an integer
 - `TIME_ZONE` which is time zone described using the pytz package, for example `pytz.timezone('Europe/London')`. A complete list of time zones is can be obtained by running `pytz.all_timezones`.
 - `DAILY_TIER_RESET_TIME` which is the time of day to reset tier roll mechanics in seconds.

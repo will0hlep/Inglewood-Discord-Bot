@@ -2,30 +2,32 @@
 This module implements the inglewood discord bot.
 """
 
+import os
+import pickle
+import random
 import asyncio
+import hashlib
+import pathlib
+import datetime
 from collections.abc import Callable
 
 import discord
 
-from Inglewood.hash_check import hash_check
-from Inglewood.server_status_check import server_status_check, initialisation
-from Inglewood.assign_roles import toggle_role
-from Inglewood.tier_roll import tier_roll
-from Inglewood.wot_time import get_timestamp
-from Inglewood.constants import (
-    TOKEN, SERVER_ID, CHANNEL_ID, DOMAIN, MINECRAFT_SERVERS, SERVER_MSG_PERIOD,
-    DAILY_TIER_RESET_TIME)
-
+from constants import (
+    TOKEN, SERVER_ID, CHANNEL_ID, USER_ID, TIME_ZONE, DAILY_TIER_RESET_TIME,
+    LOW_TIER_BLOCK_BEFORE, LOW_TIER_BLOCK_AFTER, SERVER_MSG_PERIOD, DOMAIN,
+    MINECRAFT_SERVERS)
 
 class Inglewood(discord.Client):
     """
-    Represents a bot that connects to Discord and interacts with the Discord
-    WebSocket and API.
+    Represents a bot that connects to Discord and interacts with the
+    Discord WebSocket and API.
     """
     def __init__(self):
         super().__init__(intents=discord.Intents.all())
         self.last = None
         self.tier1 = False
+        self.guild = discord.Object(SERVER_ID)
         self.tree = discord.app_commands.CommandTree(self)
         self.random_tiers_command_generator(
             "random_tiers_all", "Roll a random tier", False)
@@ -51,8 +53,22 @@ class Inglewood(discord.Client):
         after the bot is logged in but before it has connected to the
         Websocket.
         """
-        if hash_check():
-            await self.tree.sync(guild=discord.Object(SERVER_ID))
+        if os.path.exists('hash_dict.pkl'):
+            with open('hash_dict.pkl', 'rb') as f:
+                last_hash = pickle.load(f)
+        else:
+            last_hash = None
+        new_hash = {}
+        for file in os.listdir():
+            if pathlib.PurePosixPath(file).suffix == '.py':
+                with open(file, 'rb') as file_to_check:
+                    data = file_to_check.read()
+                    md5_returned = hashlib.md5(data).hexdigest()
+                    new_hash[file] = md5_returned
+        if new_hash != last_hash:
+            with open('hash_dict.pkl', 'wb') as f:
+                pickle.dump(new_hash, f)
+            await self.tree.sync(guild = self.guild)
             print('command tree updated')
         self.loop.create_task(self.game_servers_messages_update_loop())
         self.loop.create_task(self.daily_tier_roll_reset())
@@ -65,13 +81,42 @@ class Inglewood(discord.Client):
         """
         await self.wait_until_ready()
         channel = self.get_channel(CHANNEL_ID)
-        message = await initialisation(channel)
+        while True:
+            try:
+                if os.path.exists('message_id.pkl'):
+                    with open('message_id.pkl', 'rb') as f:
+                        message_id = pickle.load(f)
+                    try:
+                        message = await channel.fetch_message(message_id)
+                        break
+                    except discord.errors.NotFound:
+                        os.remove('message_id.pkl')
+                        print('previous server message not found')
+                else:
+                    message = await channel.send('placeholder')
+                    await message.pin()
+                    message_id = message.id
+                    with open('message_id.pkl', 'wb') as f:
+                        pickle.dump(message_id, f)
+                    break
+            except discord.HTTPException:
+                pass
         current_server_msg = message.content
         while True:
             server_msg = ''
             for server, ports in MINECRAFT_SERVERS.items():
-                server_msg += server_status_check(
-                    server, DOMAIN, ports)
+                server_msg += f'**{server}**'
+                for server_type, port_dict in ports.items():
+                    port = port_dict['port']
+                    try:
+                        server = server_type(DOMAIN, port)
+                        version = server.status().version.name
+                        if 'Version' in port_dict:
+                            version = port_dict['Version']
+                        server_msg += f'\nJava {version}: {DOMAIN}:{port}'
+                    except OSError:
+                        server_msg += '\nJava: Unavailable'
+                server_msg += '\n\n'
             if current_server_msg != server_msg[:-2]:
                 try:
                     await message.edit(content=server_msg)
@@ -105,14 +150,12 @@ class Inglewood(discord.Client):
             command_name : str
                 the name of the command as it will appear in Discord
             role_name: str
-                the name of the role to be assigned or removed from the user
-            tree: object
-                The command tree responsible for handling the application
-                commands in this bot
+                the name of the role to be assigned or removed from the
+                user
         """
         @self.tree.command(
-            name = command_name, description = f"Toggle {role_name} role.",
-            guild = discord.Object(id=SERVER_ID))
+            name=command_name, guild=self.guild,
+            description=f"Toggle {role_name} role.")
         @discord.app_commands.describe()
         async def func(interaction: object):
             await interaction.response.defer()
@@ -130,31 +173,32 @@ class Inglewood(discord.Client):
             command_name : str
                 the name of the command as it will appear in Discord
             required_role : str
-                the name of the role the user requires to assign role_name
+                the name of the role the user requires to assign
+                role_name
             role_name: str
                 the name of the role to be assigned to the targeted user
-            tree: object
-                The command tree responsible for handling the application
-                commands in this bot
         """
-        @self.tree.command(name = command_name,
-                    description = f"Assign {role_name} role.",
-                    guild=discord.Object(id=SERVER_ID))
+        @self.tree.command(
+            name=command_name, guild=self.guild,
+            description=f"Assign {role_name} role.")
         @discord.app_commands.describe(
             username = (
-                f"The user you want to assign the {role_name} role to (case"
-                " sensitive)."))
+                f"The user you want to assign the {role_name} role to (case "
+                "sensitive)."))
         async def func(interaction: object, username: str):
             await interaction.response.defer()
-            role = discord.utils.get(interaction.guild.roles, name=required_role)
+            role = discord.utils.get(
+                interaction.guild.roles, name=required_role)
             if role in interaction.user.roles:
                 user = interaction.guild.get_member_named(username)
                 await toggle_role(interaction, user, role_name, False)
             else:
-                print(f'you do not have permission to assign the {role_name} role')
+                print(
+                    f"you do not have permission to assign the {role_name} "
+                    "role")
                 await interaction.followup.send((
-                    f"{interaction.user.name} does not have permission to assign "
-                    f"the {role_name} role"))
+                    f"{interaction.user.name} does not have permission to "
+                    f"assign the {role_name} role"))
 
     def random_tiers_command_generator(
             self, command_name: str, command_description: str,
@@ -166,22 +210,105 @@ class Inglewood(discord.Client):
             command_name : str
                 the name of the command as it will appear in Discord
             command_description : str
-                the description of the command as it will appear in Discord
+                the description of the command as it will appear in
+                Discord
             battle_pass: bool
                 if True, command will only select from tier IV and up
-            tree: object
-                The command tree responsible for handling the application
-                commands in this bot
         """
         @self.tree.command(
-                name = command_name, description = command_description,
-                guild=discord.Object(id=SERVER_ID))
+            name=command_name, guild=self.guild,
+            description=command_description)
         @discord.app_commands.describe()
         async def func(interaction: object) -> None:
             await interaction.response.defer()
-            draw = tier_roll(self, battle_pass)
+            tiers = [
+                'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
+                'XI', 'Wildcard', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 
+                'Wildcard'
+                ]
+            timestamp = get_timestamp()
+            if (battle_pass 
+                    or timestamp > LOW_TIER_BLOCK_AFTER
+                    or timestamp < LOW_TIER_BLOCK_BEFORE):
+                tiers.remove('I')
+                tiers.remove('II')
+                tiers.remove('III')
+            elif self.tier1:
+                tiers.remove('I')
+            if self.last in tiers:
+                tiers.remove(self.last)
+                if self.last in tiers:
+                    tiers.remove(self.last)
+            draw = random.choice(tiers)
+            self.last = draw
+            if draw == 'I':
+                self.tier1 = True
+            elif (draw in ['II','V','VI','VII','VIII']
+                    and random.randint(1, 30) == 1):
+                draw += ' Preferential'
+            elif draw in ['IV'] and random.randint(1, 30) == 1:
+                if random.randint(0, 1) == 1:
+                    draw += ' Preferential'
+                else:
+                    draw += ' Double Preferential'
             await interaction.followup.send(draw)
-            print(f"{command_name} command rolled {draw} for "
+            print(
+                f"{command_name} command rolled {draw} for "
                 f"{interaction.user.name}")
+    
+
+def get_timestamp() -> float:
+    """
+    Returns the current time of day in seconds.
+
+    Returns:
+        time : float
+            time of day in seconds
+    """
+    now = datetime.datetime.now(TIME_ZONE)
+    timedelta = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
+    time = timedelta.total_seconds()
+    return time
+
+
+async def toggle_role(
+    interaction: object, user: object, role_name: str,
+    allow_remove: bool) -> tuple[bool, str]:
+    """
+    Assigns or removes role_name from user in guild and handles
+    interaction response and console output.
+
+    Parameters:
+        interaction : object
+            represents a Discord interaction
+        user : object
+            represents a Discord user
+        role_name: str
+            the name of the role to be assigned or removed from the user
+        allow_remove: bool
+            sets if removing roles is allowed
+    """
+    role = discord.utils.get(interaction.guild.roles, name=role_name)
+    if role not in user.roles:
+        try:
+            await user.add_roles(role)
+            response_string = f"{role_name} role added to {user.name}"
+        except discord.HTTPException:
+            response_string = (
+                f"couldn't assign the {role_name} role to {user.name}, <@"
+                f"{USER_ID}>")
+    elif allow_remove:
+        try:
+            await user.remove_roles(role)
+            response_string = f"{role_name} role removed from {user.name}"
+        except discord.HTTPException:
+            response_string = (
+                f"couldn't remove the {role_name} role from {user.name}, <@"
+                f"{USER_ID}>")
+    else:
+        response_string = f"{user.name} already has {role_name} role"
+    print(response_string)
+    await interaction.followup.send(response_string)
+
 
 Inglewood().run(TOKEN)
