@@ -7,11 +7,11 @@ A python discord designed to run in a docker container.
 - Tracks the status of Minecraft Servers and updated a discord message upon changes.
 - Allows discord users to assign themselve roles via slash commands.
 - Allows discord users to assign other users roles via slash commands.
-- Allows discord users to get a randomly rolled tier for world of tanks. Tiers can not repeat. Tier I is limted to once per day. The base odds of tier I, II, and III are halved. Tier I, II, and III are only availble at certain times of day. Tier I, II, and III can be disabled entirely using the battle pass version of the command. When tiers II, IV, V, VI, VII, and VIII are drawn preferential status may be rolled with 1 in 30 chance. When preferential status is drawn at tier IV, 
+- Allows discord users to get a randomly rolled tier between I and XI, plus Wildcard, for world of tanks. Tiers can not repeat. Tier I is limted to once per day. The base odds of tier I, II, III, IV are halved. Tier I, II, and III are only availble at certain times of day. Tier I, II, and III can be disabled entirely using the battle pass version of the command. When tiers II, IV, V, VI, VII, and VIII are drawn preferential status may be rolled with 1 in 30 chance. When preferential status is drawn at tier IV, 
 
 ## Quick Start
 
-In order to start the bot, download the `Dockerfile`and `inglewood.py` files. Then put them in a directory of your choosing. Next create a `constants.py` file.
+In order to start the bot, download the `Dockerfile`, `requirements.txt` and `inglewood.py` files. Then save them to a directory of your choosing. Next create a `constants.py` file in the same directory.
 
 ### constants.py
 
@@ -60,10 +60,11 @@ services:
     build:
       context: /PATH/TO/
       dockerfile: Dockerfile
+      args:
+        - PYTHONVERSION=3.14.3
     container_name: SERVICE_NAME
     environment:
       - PYTHONUNBUFFERED=1
-    restart: unless-stopped
     volumes:
       - /PATH/TO:/app
 ```
