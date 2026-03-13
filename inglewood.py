@@ -378,6 +378,7 @@ def main():
     """
     This creates and starts the inglewood discord bot.
     """
+    print(os.listdir())
     Inglewood().run(TOKEN)
 
 
