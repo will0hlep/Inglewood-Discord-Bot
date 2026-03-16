@@ -11,15 +11,22 @@ A python discord designed to run in a docker container.
 
 ## Quick Start
 
-In order to start the bot, download the `Dockerfile`, `requirements.txt` and `inglewood.py` files. Then save them to a directory of your choosing. Next create a `constants.py` file in the same directory.
+In order to start the bot, download the `Dockerfile` and `inglewood.py` files. Then save them to a directory of your choosing. Next create a `constants.py` file in the same directory.
 
 ### constants.py
 
 Put the following imports in the header of the file:
 
 ```
-import pytz
 from mcstatus import JavaServer, BedrockServer, LegacyServer
+import pytz
+
+#Minecraft Server Types
+SERVER_TYPES = {
+    JavaServer: 'Java',
+    LegacyServer: 'Java',
+    BedrockServer: 'Bedrock'
+    }
 ```
 
 Then add the following constants:
@@ -61,7 +68,7 @@ services:
       context: /PATH/TO/
       dockerfile: Dockerfile
       args:
-        - PYTHONVERSION=3.14.3
+        - PYTHONVERSION=3.14
     container_name: SERVICE_NAME
     environment:
       - PYTHONUNBUFFERED=1

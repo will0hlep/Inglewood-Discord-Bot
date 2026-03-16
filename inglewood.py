@@ -17,7 +17,6 @@ from constants import (CHANNEL_ID, DAILY_TIER_RESET_TIME, DOMAIN,
     LOW_TIER_BLOCK_AFTER, LOW_TIER_BLOCK_BEFORE, MINECRAFT_SERVERS, SERVER_ID,
     SERVER_MSG_PERIOD, SERVER_TYPES, TIME_ZONE, TOKEN, USER_ID)
 
-
 def retry() -> Callable:
     """
     Constructs a retry decorator which calls a function again if it
@@ -187,7 +186,6 @@ class Inglewood(discord.Client):
             last_hash = None
         current_hash = {}
         for file in os.listdir():
-            #print(os.listdir())
             if pathlib.PurePosixPath(file).suffix == '.py':
                 with open(file, 'rb') as file_to_hash:
                     data_to_hash = file_to_hash.read()
@@ -378,7 +376,6 @@ def main():
     """
     This creates and starts the inglewood discord bot.
     """
-    print(os.listdir())
     Inglewood().run(TOKEN)
 
 
