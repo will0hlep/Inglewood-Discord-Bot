@@ -34,32 +34,32 @@ import pytz
 
 CONSTANTS = {
     #Minecraft Server Types
-    "server_types" : {
+    "server_types": {
         JavaServer: "Java",
         LegacyServer: "Java",
         BedrockServer: "Bedrock"
         },
     #Discord API values
-    "token" : "___",
-    "server_id" : ___,
-    "channel_id" : ___,
-    "user_id" : ___,
+    "token": "___",
+    "server_id": ___,
+    "channel_id": ___,
+    "user_id": ___,
     #Discord Roles
-    "toggle_roles" : {
+    "toggle_roles": {
         ___
         },
-    "assign_roles" : {
+    "assign_roles": {
         ___
         },
     #Bot Settings
-    "time_zone" : pytz.timezone("___"),
-    "daily_tier_reset_time" : ___,
-    "low_tier_block_before" : ___,
-    "low_tier_block_after" : ___,
-    "server_msg_period" : ___,
+    "time_zone": pytz.timezone("___"),
+    "daily_tier_reset_time": ___,
+    "low_tier_block_before": ___,
+    "low_tier_block_after": ___,
+    "server_msg_period": ___,
     #Minecraft Server Addresses
-    "domain" : "___",
-    "minecraft_servers" : {
+    "domain": "___",
+    "minecraft_servers": {
       ___
       }
 }

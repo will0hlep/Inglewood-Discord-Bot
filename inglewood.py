@@ -326,16 +326,14 @@ class Inglewood(discord.Client):
         async def func(interaction: discord.Interaction) -> None:
             await interaction.response.defer()
             tiers = {
-                "Wildcard" : 2, "I" : 1, "II" : 1, "III" : 1, "IV" : 1,
-                "V" : 2, "VI" : 2, "VII" : 2, "VIII" : 2, "IX" : 2, "X" : 2,
-                "XI" : 2
+                "Wildcard": 2, "I": 1, "II": 1, "III": 1, "IV": 1, "V": 2,
+                "VI": 2, "VII": 2, "VIII": 2, "IX": 2, "X": 2, "XI": 2
             }
             timestamp = seconds_since_midnight()
             if (battle_pass or
                 timestamp > CONSTANTS["low_tier_block_after"] or
                 timestamp < CONSTANTS["low_tier_block_before"]):
-                for t in ["I", "II", "III"]:
-                    tiers[t] = 0
+                tiers.update({"I": 0, "II": 0, "III": 0})
             elif self.tier1:
                 tiers["I"] = 0
             tiers[self.last] = 0
@@ -364,7 +362,7 @@ class Inglewood(discord.Client):
         command_name = "ping_" + server.lower().replace(" ", "_")
         @self.tree.command(
             name=command_name, guild=self.guild,
-            description="Pings {server}.")
+            description=f"Pings {server}.")
         async def func(interaction: discord.Interaction) -> None:
             await interaction.response.defer()
             response_string = (
