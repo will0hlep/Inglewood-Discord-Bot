@@ -4,10 +4,9 @@ A Python Discord designed to run in a Docker container.
 
 ## Functions
 
-- Tracks the status of Minecraft Servers and updates a Discord message upon changes.
-- Allows Discord users to ping all tracked Minecraft Servers.
-- Allows Discord users to assign themselves roles via slash commands.
-- Allows Discord users to assign roles to other users via slash commands.
+- Tracks Minecraft Server status and updates a Discord message upon changes.
+Enables Discord users to ping tracked Minecraft Servers.
+- Allows Discord users to toggle their own roles and assign roles to others via slash commands.
 - Allows Discord users to get a randomly rolled tier between I and XI, plus Wildcard, for World of Tanks.
   - Tiers can not repeat.
   - Tier I is limited to once per day.
@@ -45,6 +44,13 @@ CONSTANTS = {
     "server_id" : ___,
     "channel_id" : ___,
     "user_id" : ___,
+    #Discord Roles
+    "toggle_roles" : {
+        ___
+        },
+    "assign_roles" : {
+        ___
+        },
     #Bot Settings
     "time_zone" : pytz.timezone("___"),
     "daily_tier_reset_time" : ___,
@@ -66,6 +72,8 @@ Then fill in the following values for each of the keys:
 - `server_id`, your Discord server's ID as an integer.
 - `channel_id`, the ID of the Discord channel containing the Minecraft server status message  as an integer.
 - `user_id`, your Discord user ID as an integer.
+- `toggle_roles`, nested dictionaries containing command names and roles to be toggled.
+- `assign_roles`, nested dictionaries containing command names, roles to be assigned, and the role needed to assign.
 - `time_zone`, your time zone described using the pytz package, for example `pytz.timezone('Europe/London')`.
   - A complete list of time zones can be obtained by running `pytz.all_timezones`.
 - `daily_tier_reset_time`, the time of day to reset tier roll mechanics in seconds as an integer.
@@ -73,7 +81,15 @@ Then fill in the following values for each of the keys:
 - `low_tier_block_after`, the latest time of day at which low tiers can be rolled in seconds as an integer.
 - `server_msg_period`, the time between Minecraft server checks in seconds as an integer.
 - `domain`, the domain or IP addresses of your Minecraft servers as a string.
-- `minecraft_servers`, a further nested dictionary containing names, ports, and types of Minecraft servers to be monitored.
+- `minecraft_servers`, nested dictionaries containing names, ports, and types of Minecraft servers to be monitored.
+
+#### `toggle_roles` Dictionary Structure
+
+For each role you want users to be able to toggle, include an entry in this dictionary where the key is the name of the command and the value is the name of the role to be toggled.
+
+#### `assign_roles` Dictionary Structure
+
+For each role you want users to be able to assign to other users, include an entry in this dictionary where the key is the name of the command and the value is a tuple containing the name of the role required to use the command and the name of the role to be toggled.
 
 #### `minecraft_servers` Dictionary Structure
 
