@@ -23,36 +23,59 @@ In order to start the bot, download the `Dockerfile` and `inglewood.py` files. T
 
 ### constants.py
 
-Put the following in the header of `constants.py`:
+Put the following in `constants.py`:
 
 ```
+"""
+This module defines constants.
+"""
+
 from mcstatus import JavaServer, BedrockServer, LegacyServer
 import pytz
 
-#Minecraft Server Types
-SERVER_TYPES = {
-    JavaServer: 'Java',
-    LegacyServer: 'Java',
-    BedrockServer: 'Bedrock'
-    }
+CONSTANTS = {
+    #Minecraft Server Types
+    "server_types" : {
+        JavaServer: "Java",
+        LegacyServer: "Java",
+        BedrockServer: "Bedrock"
+        },
+    #Discord API values
+    "token" : "___",
+    "server_id" : ___,
+    "channel_id" : ___,
+    "user_id" : ___,
+    #Bot Settings
+    "time_zone" : pytz.timezone("___"),
+    "daily_tier_reset_time" : ___,
+    "low_tier_block_before" : ___,
+    "low_tier_block_after" : ___,
+    "server_msg_period" : ___,
+    #Minecraft Server Addresses
+    "domain" : "___",
+    "minecraft_servers" : {
+      ___
+      }
+}
+
 ```
 
-Then add the following constants:
+Then fill in the following values for each of the keys:
 
-- `TOKEN`, which is your bot's Discord api token as a string
-- `SERVER_ID`, which is your Discord server's ID as an integer
-- `CHANNEL_ID`, which is the ID of the Discord channel containing the Minecraft server status message  as an integer
-- `USER_ID`, which is your Discord user ID as an integer
-- `TIME_ZONE`, which is the time zone described using the pytz package, for example `pytz.timezone('Europe/London')`.
+- `token`, your bot's Discord api token as a string.
+- `server_id`, your Discord server's ID as an integer.
+- `channel_id`, the ID of the Discord channel containing the Minecraft server status message  as an integer.
+- `user_id`, your Discord user ID as an integer.
+- `time_zone`, your time zone described using the pytz package, for example `pytz.timezone('Europe/London')`.
   - A complete list of time zones can be obtained by running `pytz.all_timezones`.
-- `DAILY_TIER_RESET_TIME`, which is the time of day to reset tier roll mechanics in seconds.
-- `LOW_TIER_BLOCK_BEFORE`, which is the earliest time of day at which low tiers can be rolled in seconds.
-- `LOW_TIER_BLOCK_AFTER`, which is the latest time of day at which low tiers can be rolled in seconds.
-- `SERVER_MSG_PERIOD`, which is the time between Minecraft server checks in seconds.
-- `DOMAIN`, which is the domain or IP addresses of your Minecraft servers.
-- `MINECRAFT_SERVERS`, which is several nested dictionaries containing names, ports, and types of Minecraft servers to be monitored.
+- `daily_tier_reset_time`, the time of day to reset tier roll mechanics in seconds as an integer.
+- `low_tier_block_before`, the earliest time of day at which low tiers can be rolled in seconds as an integer.
+- `low_tier_block_after`, the latest time of day at which low tiers can be rolled in seconds as an integer.
+- `server_msg_period`, the time between Minecraft server checks in seconds as an integer.
+- `domain`, the domain or IP addresses of your Minecraft servers as a string.
+- `minecraft_servers`, a further nested dictionary containing names, ports, and types of Minecraft servers to be monitored.
 
-#### `MINECRAFT_SERVERS` Dictionary Structure
+#### `minecraft_servers` Dictionary Structure
 
 For each Minecraft server you want to monitor, include an entry in this dictionary where the key is the `SERVER_NAME` and the value is a nested dictionary.
 

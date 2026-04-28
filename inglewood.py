@@ -8,19 +8,22 @@ import datetime
 import hashlib
 import os
 import pathlib
-import pickle
+import json
 import random
 
 import discord
 
-from constants import (CHANNEL_ID, DAILY_TIER_RESET_TIME, DOMAIN,
-    LOW_TIER_BLOCK_AFTER, LOW_TIER_BLOCK_BEFORE, MINECRAFT_SERVERS, SERVER_ID,
-    SERVER_MSG_PERIOD, SERVER_TYPES, TIME_ZONE, TOKEN, USER_ID)
+from constants import CONSTANTS
 
 def retry() -> Callable:
     """
     Constructs a retry decorator which calls a function again if it
     raises an Error.
+
+    Parameters:
+        delay : int
+            number of seconds to wait before retrying the function after
+            failure.
 
     Returns:
         decorator : Callable
@@ -37,7 +40,7 @@ def retry() -> Callable:
     return decorator
 
 
-def get_timestamp() -> float:
+def seconds_since_midnight() -> float:
     """
     Returns the current time of day in seconds.
 
@@ -45,7 +48,7 @@ def get_timestamp() -> float:
         time : float
             time of day in seconds
     """
-    now = datetime.datetime.now(TIME_ZONE)
+    now = datetime.datetime.now(CONSTANTS["time_zone"])
     timedelta = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
     time = timedelta.total_seconds()
     return time
@@ -66,28 +69,29 @@ def minecraft_server_query(measure_latency: bool) -> str:
             version, address information, and latency information for
             specified Minecraft servers.
     """
-    response_string = ''
-    for server, ports in MINECRAFT_SERVERS.items():
-        response_string += f'**{server}**'
+    response_string = ""
+    for server_name, ports in CONSTANTS["minecraft_servers"].items():
+        response_string += f"**{server_name}**"
         for server_type, port_dict in ports.items():
-            port = port_dict['port']
-            client = SERVER_TYPES[server_type]
-            server = server_type(DOMAIN, port)
+            port = port_dict["port"]
+            client = CONSTANTS["server_types"][server_type]
+            server = server_type(CONSTANTS["domain"], port)
             try:
                 server_response = server.status()
                 version = server_response.version.name
-                version = port_dict.get('Version', version)
+                version = port_dict.get("Version", version)
                 if measure_latency:
                     latency = server_response.latency
                     response_string += (
-                        f"\n{client} {version}: {DOMAIN}:{port}"
+                        f"\n{client} {version}: {CONSTANTS["domain"]}:{port}"
                         f" ({latency:.1f} ms)")
                 else:
-                    response_string += f"\n{client} {version}: {DOMAIN}:{port}"
+                    response_string += (
+                        f"\n{client} {version}: {CONSTANTS["domain"]}:{port}")
             except OSError:
-                response_string += f'\n{client}: Unavailable'
-        response_string += '\n\n'
-    return response_string.rstrip('\n')
+                response_string += f"\n{client}: Unavailable"
+        response_string += "\n\n"
+    return response_string.rstrip("\n")
 
 
 async def toggle_role(
@@ -108,14 +112,17 @@ async def toggle_role(
             sets if removing roles is allowed
     """
     role = discord.utils.get(interaction.guild.roles, name=role_name)
-    if role not in user.roles:
+    if role is None:
+        response_string = (
+            f"Role '{role_name}' not found <@{CONSTANTS["user_id"]}>")
+    elif role not in user.roles:
         try:
             await user.add_roles(role)
             response_string = f"{role_name} role added to {user.name}"
         except discord.HTTPException:
             response_string = (
                 f"couldn't assign the {role_name} role to {user.name}, <@"
-                f"{USER_ID}>")
+                f"{CONSTANTS["user_id"]}>")
     elif allow_remove:
         try:
             await user.remove_roles(role)
@@ -123,7 +130,7 @@ async def toggle_role(
         except discord.HTTPException:
             response_string = (
                 f"couldn't remove the {role_name} role from {user.name}, <@"
-                f"{USER_ID}>")
+                f"{CONSTANTS["user_id"]}>")
     else:
         response_string = f"{user.name} already has {role_name} role"
     print(response_string)
@@ -140,7 +147,7 @@ class Inglewood(discord.Client):
         self.last = None
         self.tier1 = False
         self.last_ping = 0
-        self.guild = discord.Object(SERVER_ID)
+        self.guild = discord.Object(CONSTANTS["server_id"])
         self.tree = discord.app_commands.CommandTree(self)
 
         self.random_tiers_command_generator(
@@ -168,9 +175,11 @@ class Inglewood(discord.Client):
             response_string = minecraft_server_query(True)
             try:
                 await interaction.followup.send(response_string)
-                print(f'{interaction.user.name} pinged Minecraft servers')
+                print(f"{interaction.user.name} pinged Minecraft servers")
             except discord.HTTPException:
-                pass
+                print(
+                    f"{interaction.user.name}"
+                    "could not ping Minecraft servers")
 
     async def setup_hook(self) -> None:
         """     
@@ -179,23 +188,23 @@ class Inglewood(discord.Client):
         after the bot is logged in but before it has connected to the
         Websocket.
         """
-        if os.path.exists('hash_dict.pkl'):
-            with open('hash_dict.pkl', 'rb') as f:
-                last_hash = pickle.load(f)
+        if os.path.exists("hash_dict.json"):
+            with open("hash_dict.json", "r", encoding="utf-8") as f:
+                last_hash = json.load(f)
         else:
             last_hash = None
         current_hash = {}
         for file in os.listdir():
-            if pathlib.PurePosixPath(file).suffix == '.py':
-                with open(file, 'rb') as file_to_hash:
+            if pathlib.PurePosixPath(file).suffix == ".py":
+                with open(file, "rb") as file_to_hash:
                     data_to_hash = file_to_hash.read()
                     md5_returned = hashlib.md5(data_to_hash).hexdigest()
                     current_hash[file] = md5_returned
         if current_hash != last_hash:
-            with open('hash_dict.pkl', 'wb') as f:
-                pickle.dump(current_hash, f)
+            with open("hash_dict.json", "w", encoding="utf-8") as f:
+                json.dump(current_hash, f)
             await self.tree.sync(guild = self.guild)
-            print('command tree updated')
+            print("command tree updated")
         self.loop.create_task(self.game_servers_messages_update_loop())
         self.loop.create_task(self.daily_tier_roll_reset())
 
@@ -207,27 +216,27 @@ class Inglewood(discord.Client):
         address information of all specified Minecraft servers
         """
         await self.wait_until_ready()
-        channel = self.get_channel(CHANNEL_ID)
+        channel = self.get_channel(CONSTANTS["channel_id"])
         while True:
             try:
-                if os.path.exists('message_id.pkl'):
-                    with open('message_id.pkl', 'rb') as f:
-                        message_id = pickle.load(f)
+                if os.path.exists("message_id.json"):
+                    with open("message_id.json", "r", encoding="utf-8") as f:
+                        message_id = json.load(f)
                     try:
                         message = await channel.fetch_message(message_id)
                         break
                     except discord.errors.NotFound:
-                        os.remove('message_id.pkl')
-                        print('previous server message not found')
+                        os.remove("message_id.json")
+                        print("previous server message not found")
                 else:
-                    message = await channel.send('placeholder')
+                    message = await channel.send("placeholder")
                     await message.pin()
                     message_id = message.id
-                    with open('message_id.pkl', 'wb') as f:
-                        pickle.dump(message_id, f)
+                    with open("message_id.json", "w", encoding="utf-8") as f:
+                        json.dump(message_id, f)
                     break
             except discord.HTTPException:
-                pass
+                print("HTTP error")
         current_server_msg = message.content
         while True:
             server_msg = minecraft_server_query(False)
@@ -235,26 +244,27 @@ class Inglewood(discord.Client):
                 try:
                     await message.edit(content=server_msg)
                     current_server_msg = server_msg
-                    print('server message updated')
+                    print("server message updated")
                 except discord.HTTPException:
-                    pass
-            await asyncio.sleep(SERVER_MSG_PERIOD)
+                    print("HTTP error")
+            await asyncio.sleep(CONSTANTS["server_msg_period"])
 
     @retry()
     async def daily_tier_roll_reset(self) -> None:
         """
         Performs a daily reset of the tier roll mechanics at
-        DAILY_TIER_RESET_TIME each day.
+        daily_tier_reset_time each day.
         """
         await self.wait_until_ready()
         while True:
-            time = DAILY_TIER_RESET_TIME - get_timestamp()
+            time = (CONSTANTS["daily_tier_reset_time"]
+                    - seconds_since_midnight())
             if time <= 0:
                 time += 24*60*60
             await asyncio.sleep(time)
             self.last = None
             self.tier1 = False
-            print('reset daily tier roll variables')
+            print("reset daily tier roll variables")
 
     def toggle_role_command_generator(
             self, command_name: str, role_name: str) -> None:
@@ -271,11 +281,11 @@ class Inglewood(discord.Client):
         @self.tree.command(
             name=command_name, guild=self.guild,
             description=f"Toggle {role_name} role.")
-        #@discord.app_commands.describe()
         async def func(interaction: object):
             await interaction.response.defer()
             await toggle_role(
                 interaction, interaction.user, role_name, True)
+        func.__name__ = command_name
 
     def assign_role_command_generator(
             self, command_name: str, required_role: str,
@@ -304,7 +314,12 @@ class Inglewood(discord.Client):
             await interaction.response.defer()
             role = discord.utils.get(
                 interaction.guild.roles, name=required_role)
-            if role in interaction.user.roles:
+            if role is None:
+                print(
+                    f"Role '{role_name}' not found <@{CONSTANTS["user_id"]}>")
+                await interaction.followup.send(
+                    f"Role '{role_name}' not found <@{CONSTANTS["user_id"]}>")
+            elif role in interaction.user.roles:
                 user = interaction.guild.get_member_named(username)
                 await toggle_role(interaction, user, role_name, False)
             else:
@@ -314,6 +329,7 @@ class Inglewood(discord.Client):
                 await interaction.followup.send((
                     f"{interaction.user.name} does not have permission to "
                     f"assign the {role_name} role"))
+        func.__name__ = command_name
 
     def random_tiers_command_generator(
             self, command_name: str, command_description: str,
@@ -333,51 +349,51 @@ class Inglewood(discord.Client):
         @self.tree.command(
             name=command_name, guild=self.guild,
             description=command_description)
-        #@discord.app_commands.describe()
         async def func(interaction: object) -> None:
             await interaction.response.defer()
             tiers = [
-                'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
-                'XI', 'Wildcard', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 
-                'Wildcard'
+                "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
+                "XI", "Wildcard", "V", "VI", "VII", "VIII", "IX", "X", "XI", 
+                "Wildcard"
                 ]
-            timestamp = get_timestamp()
+            timestamp = seconds_since_midnight()
             if (battle_pass
-                    or timestamp > LOW_TIER_BLOCK_AFTER
-                    or timestamp < LOW_TIER_BLOCK_BEFORE):
-                tiers.remove('I')
-                tiers.remove('II')
-                tiers.remove('III')
+                    or timestamp > CONSTANTS["low_tier_block_after"]
+                    or timestamp < CONSTANTS["low_tier_block_before"]):
+                tiers.remove("I")
+                tiers.remove("II")
+                tiers.remove("III")
             elif self.tier1:
-                tiers.remove('I')
+                tiers.remove("I")
             if self.last in tiers:
                 tiers.remove(self.last)
                 if self.last in tiers:
                     tiers.remove(self.last)
             draw = random.choice(tiers)
             self.last = draw
-            if draw == 'I':
+            if draw == "I":
                 self.tier1 = True
-            elif (draw in ['II','V','VI','VII','VIII']
+            elif (draw in ["II","V","VI","VII","VIII"]
                     and random.randint(1, 30) == 1):
-                draw += ' Preferential'
-            elif draw in ['IV'] and random.randint(1, 30) == 1:
+                draw += " Preferential"
+            elif draw == "IV" and random.randint(1, 30) == 1:
                 if random.randint(0, 1) == 1:
-                    draw += ' Preferential'
+                    draw += " Preferential"
                 else:
-                    draw += ' Double Preferential'
+                    draw += " Double Preferential"
             await interaction.followup.send(draw)
             print(
                 f"{command_name} command rolled {draw} for "
                 f"{interaction.user.name}")
+        func.__name__ = command_name
 
 
 def main():
     """
     This creates and starts the inglewood discord bot.
     """
-    Inglewood().run(TOKEN)
+    Inglewood().run(CONSTANTS["token"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

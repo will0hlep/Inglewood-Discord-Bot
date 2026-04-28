@@ -2,6 +2,6 @@ constants.py
 *.png
 __pycache__
 *.cfg
-*.pkl
+*.json
 .venv
-.DS_Store
+*.DS_Store
