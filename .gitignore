@@ -4,3 +4,4 @@ __pycache__
 *.cfg
 *.pkl
 .venv
+.DS_Store
