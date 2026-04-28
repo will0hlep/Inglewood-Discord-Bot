@@ -16,6 +16,7 @@ class CogControl(commands.Cog):
         self.bot = bot
         self.cog_control_command_generator("", self.bot.load_extension)
         self.cog_control_command_generator("re", self.bot.reload_extension)
+        self.cog_control_command_generator("un", self.bot.unload_extension)
 
     def cog_control_command_generator(
             self, prefix: str, function: Callable[[str, str], None]) -> None:
