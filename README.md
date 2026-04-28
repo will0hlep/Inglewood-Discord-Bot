@@ -5,7 +5,7 @@ A Python Discord designed to run in a Docker container.
 ## Functions
 
 - Tracks Minecraft Server status and updates a Discord message upon changes.
-Enables Discord users to ping tracked Minecraft Servers.
+- Allows Discord users to ping tracked Minecraft Servers.
 - Allows Discord users to toggle their own roles and assign roles to others via slash commands.
 - Allows Discord users to get a randomly rolled tier between I and XI, plus Wildcard, for World of Tanks.
   - Tiers can not repeat.
@@ -15,6 +15,7 @@ Enables Discord users to ping tracked Minecraft Servers.
   - Tiers I, II, and III can be disabled entirely using the battle pass version of the command.
   - When tiers II, IV, V, VI, VII, and VIII are drawn, preferential status may be rolled with a 1 in 30 chance.
   - When preferential status is drawn at tier IV, double preferential status may be rolled with a 1 in 2 chance.
+- Allows the owner to load, modify and reload cogs without restarting the bot.
 
 ## Quick Start
 
@@ -25,12 +26,10 @@ In order to start the bot, download the `Dockerfile` and `inglewood.py` files. T
 Put the following in `constants.py`:
 
 ```
-"""
-This module defines constants.
-"""
+import datetime
+from zoneinfo import ZoneInfo
 
 from mcstatus import JavaServer, BedrockServer, LegacyServer
-import pytz
 
 CONSTANTS = {
     #Minecraft Server Types
@@ -52,10 +51,10 @@ CONSTANTS = {
         ___
         },
     #Bot Settings
-    "time_zone": pytz.timezone("___"),
-    "daily_tier_reset_time": ___,
-    "low_tier_block_before": ___,
-    "low_tier_block_after": ___,
+    "time_zone": ZoneInfo("Europe/Amsterdam"),
+    "daily_tier_reset_time": datetime.time(__, __, __, __),
+    "low_tier_block_before": datetime.time(__, __, __, __),
+    "low_tier_block_after": datetime.time(__, __, __, __),
     "server_msg_period": ___,
     #Minecraft Server Addresses
     "domain": "___",
@@ -63,7 +62,6 @@ CONSTANTS = {
       ___
       }
 }
-
 ```
 
 Then fill in the following values for each of the keys:
@@ -76,9 +74,9 @@ Then fill in the following values for each of the keys:
 - `assign_roles`, nested dictionaries containing command names, roles to be assigned, and the role needed to assign.
 - `time_zone`, your time zone described using the pytz package, for example `pytz.timezone('Europe/London')`.
   - A complete list of time zones can be obtained by running `pytz.all_timezones`.
-- `daily_tier_reset_time`, the time of day to reset tier roll mechanics in seconds as an integer.
-- `low_tier_block_before`, the earliest time of day at which low tiers can be rolled in seconds as an integer.
-- `low_tier_block_after`, the latest time of day at which low tiers can be rolled in seconds as an integer.
+- `daily_tier_reset_time`, the time of day to reset tier roll mechanics expressed as a datetime.time object.
+- `low_tier_block_before`, the earliest time of day at which low tiers can be rolled in seconds expressed as a datetime.time object.
+- `low_tier_block_after`, the latest time of day at which low tiers can be rolled in seconds expressed as a datetime.time object.
 - `server_msg_period`, the time between Minecraft server checks in seconds as an integer.
 - `domain`, the domain or IP addresses of your Minecraft servers as a string.
 - `minecraft_servers`, nested dictionaries containing names, ports, and types of Minecraft servers to be monitored.

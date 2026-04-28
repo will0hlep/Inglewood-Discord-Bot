@@ -1,7 +1,16 @@
+#configuration and generated files
 constants.py
-*.png
-__pycache__
-*.cfg
 *.json
+
+#byte-compiled
+__pycache__
+
+#environments
 .venv
+
+#OS configuration
+*.cfg
 *.DS_Store
+
+#other
+*.png
