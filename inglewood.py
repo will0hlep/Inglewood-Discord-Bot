@@ -31,7 +31,7 @@ def retry() -> Callable:
             while True:
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
+                except Exception as e: #pylint: disable=W0718
                     print(e)
         return retry_func
     return decorator
@@ -87,7 +87,7 @@ def minecraft_server_query(measure_latency: bool) -> str:
             except OSError:
                 response_string += f'\n{client}: Unavailable'
         response_string += '\n\n'
-    return response_string
+    return response_string.rstrip('\n')
 
 
 async def toggle_role(
@@ -231,7 +231,7 @@ class Inglewood(discord.Client):
         current_server_msg = message.content
         while True:
             server_msg = minecraft_server_query(False)
-            if current_server_msg != server_msg[:-2]:
+            if current_server_msg != server_msg:
                 try:
                     await message.edit(content=server_msg)
                     current_server_msg = server_msg
