@@ -148,13 +148,13 @@ class Inglewood(discord.Client):
             "random_tiers_all", "Roll a random tier", False)
         self.random_tiers_command_generator(
             "random_tiers_iv_plus", "Roll a random tier (IV+)", True)
-        
+
         for command, role in CONSTANTS["toggle_roles"].items():
             self.toggle_role_command_generator(command, role)
 
         for command, role in CONSTANTS["assign_roles"].items():
             self.assign_role_command_generator(command, role[0], role[1])
-        
+
         for server, ports in CONSTANTS["minecraft_servers"].items():
             self.ping_server_command_generator(server, ports)
 
@@ -287,7 +287,8 @@ class Inglewood(discord.Client):
             username = (
                 f"The user you want to assign the {role_name} role to (case "
                 "sensitive)."))
-        async def func(interaction: discord.Interaction, username: str) -> None:
+        async def func(
+                interaction: discord.Interaction, username: str) -> None:
             await interaction.response.defer()
             role = discord.utils.get(
                 interaction.guild.roles, name=required_role)
@@ -333,7 +334,7 @@ class Inglewood(discord.Client):
             if (battle_pass or
                 timestamp > CONSTANTS["low_tier_block_after"] or
                 timestamp < CONSTANTS["low_tier_block_before"]):
-                for t in {"I", "II", "III"}:
+                for t in ["I", "II", "III"]:
                     tiers[t] = 0
             elif self.tier1:
                 tiers["I"] = 0
