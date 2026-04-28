@@ -18,6 +18,7 @@ class WorldofTanks(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.required = False
         self.last = None
         self.tier1 = False
         self.random_tiers_command_generator(

@@ -18,6 +18,7 @@ class Helper(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.required = True
 
     async def hashcheck(self, load: bool = True) -> None:
         """

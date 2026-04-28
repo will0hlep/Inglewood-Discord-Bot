@@ -14,6 +14,7 @@ class CogControl(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.required = True
         self.cog_control_command_generator("", self.bot.load_extension)
         self.cog_control_command_generator("re", self.bot.reload_extension)
         self.cog_control_command_generator("un", self.bot.unload_extension)
@@ -36,17 +37,22 @@ class CogControl(commands.Cog):
             interaction: discord.Interaction, cog: str) -> None:
             await interaction.response.defer()
             if await self.bot.is_owner(interaction.user):
-                try:
-                    await function(f"cogs.{cog}")
-                    await self.bot.cogs["Helper"].hashcheck(False)
+                if prefix == "un" and self.bot.cogs[cog].required:
                     await self.bot.cogs["Helper"].respond(
-                        f"{cog} cog {prefix}loaded", interaction)
-                except (commands.ExtensionNotLoaded,
-                        commands.ExtensionNotFound, commands.NoEntryPointError,
-                        commands.ExtensionFailed) as e:
-                    await self.bot.cogs["Helper"].respond(
-                        f"Extension not {prefix}loaded: {e}",
-                        interaction)
+                    f"{cog} cannot be unloaded", interaction)
+                else:
+                    try:
+                        await function(f"cogs.{cog}")
+                        await self.bot.cogs["Helper"].hashcheck(False)
+                        await self.bot.cogs["Helper"].respond(
+                            f"{cog} cog {prefix}loaded", interaction)
+                    except (commands.ExtensionNotLoaded,
+                            commands.ExtensionNotFound,
+                            commands.NoEntryPointError,
+                            commands.ExtensionFailed) as e:
+                        await self.bot.cogs["Helper"].respond(
+                            f"Extension not {prefix}loaded: {e}",
+                            interaction)
             else:
                 await self.bot.cogs["Helper"].respond(
                     f"{interaction.user} attempted restricted command",

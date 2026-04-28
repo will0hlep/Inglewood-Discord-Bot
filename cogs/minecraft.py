@@ -19,6 +19,7 @@ class Minecraft(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.required = False
         for server, ports in CONSTANTS["minecraft_servers"].items():
             self.ping_server_command_generator(server, ports)
         self.game_servers_messages_update_loop.start()

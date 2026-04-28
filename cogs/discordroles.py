@@ -14,6 +14,7 @@ class DiscordRoles(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.required = False
         for command, role in CONSTANTS["toggle_roles"].items():
             self.toggle_role_command_generator(command, role)
         for command, role in CONSTANTS["assign_roles"].items():
