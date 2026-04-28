@@ -9,12 +9,11 @@ import discord
 from discord.ext import commands, tasks
 
 from constants import CONSTANTS
-from helper import respond
 
 
 class WorldofTanks(commands.Cog):
     """
-    Represents a cog that add commands for managing World of Tanks
+    Represents a cog that adds commands for managing World of Tanks
     related commands.
     """
     def __init__(self, bot):
@@ -37,7 +36,8 @@ class WorldofTanks(commands.Cog):
         """
         self.last = None
         self.tier1 = False
-        await respond("reset daily tier roll variables")
+        await self.bot.cogs["Helper"].respond(
+            "reset daily tier roll variables")
 
     async def cog_unload(self):
         """
@@ -88,7 +88,7 @@ class WorldofTanks(commands.Cog):
                 if draw == "IV" and random.random() < 1/2:
                     draw += " Double"
                 draw += " Preferential"
-            await respond(draw, interaction)
+            await self.bot.cogs["Helper"].respond(draw, interaction)
         func.__name__ = command_name
 
 

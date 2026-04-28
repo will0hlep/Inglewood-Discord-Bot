@@ -7,12 +7,10 @@ from collections.abc import Callable
 import discord
 from discord.ext import commands
 
-from helper import hashcheck, respond
-
 
 class CogControl(commands.Cog):
     """
-    Represents a cog that add commands for managing cogs.
+    Represents a cog that adds commands for managing cogs.
     """
     def __init__(self, bot):
         self.bot = bot
@@ -39,16 +37,17 @@ class CogControl(commands.Cog):
             if await self.bot.is_owner(interaction.user):
                 try:
                     await function(f"cogs.{cog}")
-                    await hashcheck(self.bot, False)
-                    await respond(f"{cog} cog {prefix}loaded", interaction)
+                    await self.bot.cogs["Helper"].hashcheck(False)
+                    await self.bot.cogs["Helper"].respond(
+                        f"{cog} cog {prefix}loaded", interaction)
                 except (commands.ExtensionNotLoaded,
                         commands.ExtensionNotFound, commands.NoEntryPointError,
                         commands.ExtensionFailed) as e:
-                    await respond(
+                    await self.bot.cogs["Helper"].respond(
                         f"Extension not {prefix}loaded: {e}",
                         interaction)
             else:
-                await respond(
+                await self.bot.cogs["Helper"].respond(
                     f"{interaction.user} attempted restricted command",
                     interaction)
         func.__name__ = f"{prefix}load_cog"

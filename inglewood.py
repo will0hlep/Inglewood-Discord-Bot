@@ -6,7 +6,6 @@ import discord
 from discord.ext import commands
 
 from constants import CONSTANTS
-from helper import hashcheck
 
 
 class Inglewood(commands.Bot):
@@ -22,7 +21,8 @@ class Inglewood(commands.Bot):
         Performs asynchronous setup after the bot is logged in but
         before it has connected to the Websocket.
         """
-        await hashcheck(self)
+        await self.load_extension("cogs.helper")
+        await self.cogs["Helper"].hashcheck()
 
 
 def main():
