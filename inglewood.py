@@ -6,38 +6,14 @@ import asyncio
 from collections.abc import Callable
 import datetime
 import hashlib
+import json
 import os
 import pathlib
-import json
 import random
 
 import discord
 
 from constants import CONSTANTS
-
-def retry() -> Callable:
-    """
-    Constructs a retry decorator which calls a function again if it
-    raises an Error.
-
-    Parameters:
-        delay : int
-            number of seconds to wait before retrying the function after
-            failure.
-
-    Returns:
-        decorator : Callable
-            the retry decorator function.
-    """
-    def decorator(func):
-        def retry_func(*args, **kwargs):
-            while True:
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e: #pylint: disable=W0718
-                    print(e)
-        return retry_func
-    return decorator
 
 
 def seconds_since_midnight() -> float:
@@ -208,7 +184,6 @@ class Inglewood(discord.Client):
         self.loop.create_task(self.game_servers_messages_update_loop())
         self.loop.create_task(self.daily_tier_roll_reset())
 
-    @retry()
     async def game_servers_messages_update_loop(self) -> None:
         """
         Updates the message in the relavent channel every
@@ -249,7 +224,6 @@ class Inglewood(discord.Client):
                     print("HTTP error")
             await asyncio.sleep(CONSTANTS["server_msg_period"])
 
-    @retry()
     async def daily_tier_roll_reset(self) -> None:
         """
         Performs a daily reset of the tier roll mechanics at
