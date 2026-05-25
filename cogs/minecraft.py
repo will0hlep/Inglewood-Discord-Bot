@@ -60,7 +60,10 @@ class Minecraft(commands.Cog):
                     if measure_latency:
                         response_string += f" ({server_response.latency:.1f} ms)"
                 except OSError as e:
-                    await self.bot.cogs["Helper"].respond(f"OSError: {e}")
+                    if e != "timed out":
+                        await self.bot.cogs["Helper"].respond(
+                            f"OSError: {server_name} ({client} {version}):"
+                            f"{CONSTANTS["domain"]}:{port}, {e}")
                     response_string += f"\n{client}: Unavailable"
             response_string += "\n\n"
         return response_string.rstrip("\n")
