@@ -49,21 +49,22 @@ class Minecraft(commands.Cog):
             response_string += f"**{server_name}**"
             for server_type, port_dict in ports.items():
                 port = port_dict["port"]
+                domain = CONSTANTS["domain"]
                 client = CONSTANTS["server_types"][server_type]
-                server = server_type(CONSTANTS["domain"], port)
+                server = server_type(domain, port)
                 try:
                     server_response = server.status()
                     version = server_response.version.name
                     version = port_dict.get("Version", version)
                     response_string += (
-                        f"\n{client} {version}: {CONSTANTS["domain"]}:{port}")
+                        f"\n{client} {version}: {domain}:{port}")
                     if measure_latency:
                         response_string += f" ({server_response.latency:.1f} ms)"
                 except OSError as e:
-                    if e != "timed out":
+                    if not isinstance(e, TimeoutError):
                         await self.bot.cogs["Helper"].respond(
-                            f"OSError: {server_name} ({client} {version}):"
-                            f"{CONSTANTS["domain"]}:{port}, {e}")
+                            f"OSError: {server_name} ({client} {version}): "
+                            f"{domain}:{port}, {e}")
                     response_string += f"\n{client}: Unavailable"
             response_string += "\n\n"
         return response_string.rstrip("\n")
