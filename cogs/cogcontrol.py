@@ -15,12 +15,13 @@ class CogControl(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.required = True
-        self.cog_control_command_generator("", self.bot.load_extension)
-        self.cog_control_command_generator("re", self.bot.reload_extension)
-        self.cog_control_command_generator("un", self.bot.unload_extension)
+        self.cog_control_cmd_generator("", self.bot.load_extension, False)
+        self.cog_control_cmd_generator("re", self.bot.reload_extension, False)
+        self.cog_control_cmd_generator("un", self.bot.unload_extension, True)
 
-    def cog_control_command_generator(
-            self, prefix: str, function: Callable[[str, str], None]) -> None:
+    def cog_control_cmd_generator(
+            self, prefix: str, function: Callable[[str, str], None],
+            safety: bool) -> None:
         """
         Builds discord commands to allow the loading and reloading of
         cogs.
@@ -37,7 +38,7 @@ class CogControl(commands.Cog):
             interaction: discord.Interaction, cog: str) -> None:
             await interaction.response.defer()
             if await self.bot.is_owner(interaction.user):
-                if prefix == "un" and self.bot.cogs[cog].required:
+                if safety and self.bot.cogs[cog].required:
                     await self.bot.cogs["Helper"].respond(
                     f"{cog} cannot be unloaded", interaction)
                 else:

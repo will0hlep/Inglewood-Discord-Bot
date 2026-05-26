@@ -53,13 +53,14 @@ class Minecraft(commands.Cog):
                 client = CONSTANTS["server_types"][server_type]
                 server = server_type(domain, port)
                 try:
-                    server_response = server.status()
+                    server_response = await server.async_status()
                     version = server_response.version.name
                     version = port_dict.get("Version", version)
                     response_string += (
                         f"\n{client} {version}: {domain}:{port}")
                     if measure_latency:
-                        response_string += f" ({server_response.latency:.1f} ms)"
+                        response_string += (
+                            f" ({server_response.latency:.1f} ms)")
                 except OSError as e:
                     if not isinstance(e, TimeoutError):
                         await self.bot.cogs["Helper"].respond(
