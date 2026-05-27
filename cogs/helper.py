@@ -58,12 +58,13 @@ class Helper(Cog):
             interaction: discord.Interaction
                 The discord interaction to respond to
         """
-        if interaction is not None:
-            try:
+        try:
+            if interaction is not None:
                 await interaction.followup.send(msg)
-            except discord.HTTPException as e:
-                print(f"HTTP error: {e}")
-        print(msg)
+        except discord.HTTPException as e:
+            print(f"HTTP error: {e}")
+        else:
+            print(msg)
 
 
 async def setup(bot: Inglewood) -> None:
