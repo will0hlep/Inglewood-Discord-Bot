@@ -6,19 +6,18 @@ import datetime
 import random
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks
 
 from constants import CONSTANTS
+from inglewood import Cog, Inglewood
 
-
-class WorldofTanks(commands.Cog):
+class WorldofTanks(Cog):
     """
     Represents a cog that adds commands for managing World of Tanks
     related commands.
     """
-    def __init__(self, bot):
-        self.bot = bot
-        self.required = False
+    def __init__(self, bot: Inglewood):
+        super().__init__(bot)
         self.last = None
         self.tier1 = False
         self.random_tiers_command_generator(
@@ -93,12 +92,12 @@ class WorldofTanks(commands.Cog):
         func.__name__ = command_name
 
 
-async def setup(bot: commands.bot) -> None:
+async def setup(bot: Inglewood) -> None:
     """
     The entry point to load this extention.
 
     Parameter:
-        bot : commands.bot
+        bot : Inglewood
             The bot that loads this extension.
     """
     await bot.add_cog(WorldofTanks(bot))

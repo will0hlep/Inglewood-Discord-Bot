@@ -7,19 +7,18 @@ import json
 import os
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks
 
 from constants import CONSTANTS
+from inglewood import Cog, Inglewood
 
-
-class Minecraft(commands.Cog):
+class Minecraft(Cog):
     """
     Represents a cog that adds commands for managing Minecraft server
     related commands.
     """
-    def __init__(self, bot):
-        self.bot = bot
-        self.required = False
+    def __init__(self, bot: Inglewood):
+        super().__init__(bot)
         for server, ports in CONSTANTS["minecraft_servers"].items():
             self.ping_server_command_generator(server, ports)
         self.game_servers_messages_update_loop.start()
@@ -54,6 +53,13 @@ class Minecraft(commands.Cog):
                 server = server_type(domain, port)
                 try:
                     server_response = await server.async_status()
+                except OSError as e:
+                    if not isinstance(e, TimeoutError):
+                        await self.bot.cogs["Helper"].respond(
+                            f"OSError: {server_name} ({client} {version}): "
+                            f"{domain}:{port}, {e}")
+                    response_string += f"\n{client}: Unavailable"
+                else:
                     version = server_response.version.name
                     version = port_dict.get("Version", version)
                     response_string += (
@@ -61,12 +67,6 @@ class Minecraft(commands.Cog):
                     if measure_latency:
                         response_string += (
                             f" ({server_response.latency:.1f} ms)")
-                except OSError as e:
-                    if not isinstance(e, TimeoutError):
-                        await self.bot.cogs["Helper"].respond(
-                            f"OSError: {server_name} ({client} {version}): "
-                            f"{domain}:{port}, {e}")
-                    response_string += f"\n{client}: Unavailable"
             response_string += "\n\n"
         return response_string.rstrip("\n")
 
@@ -86,13 +86,14 @@ class Minecraft(commands.Cog):
                         message_id = json.load(f)
                     try:
                         message = await channel.fetch_message(message_id)
-                        break
                     except discord.errors.NotFound as e:
                         await self.bot.cogs["Helper"].respond(
                             f"discord.errors.NotFound: {e}")
                         os.remove("message_id.json")
                         await self.bot.cogs["Helper"].respond(
                             "previous server message not found")
+                    else:
+                        break
                 else:
                     message = await channel.send("placeholder")
                     await message.pin()
@@ -110,12 +111,13 @@ class Minecraft(commands.Cog):
             if current_server_msg != server_msg:
                 try:
                     await message.edit(content=server_msg)
-                    current_server_msg = server_msg
-                    await self.bot.cogs["Helper"].respond(
-                        "server message updated")
                 except discord.HTTPException as e:
                     await self.bot.cogs["Helper"].respond(
                         f"discord.HTTPException: {e}")
+                else:
+                    current_server_msg = server_msg
+                    await self.bot.cogs["Helper"].respond(
+                        "server message updated")
             await asyncio.sleep(CONSTANTS["server_msg_period"])
 
     async def cog_unload(self):
@@ -146,12 +148,12 @@ class Minecraft(commands.Cog):
         func.__name__ = command_name
 
 
-async def setup(bot: commands.bot) -> None:
+async def setup(bot: Inglewood) -> None:
     """
     The entry point to load this extention.
 
     Parameter:
-        bot : commands.bot
+        bot : Inglewood
             The bot that loads this extension.
     """
     await bot.add_cog(Minecraft(bot))

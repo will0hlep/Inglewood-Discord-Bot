@@ -8,26 +8,20 @@ import os
 import pathlib
 
 import discord
-from discord.ext import commands
 
+from inglewood import Cog, Inglewood
 
-class Helper(commands.Cog):
+class Helper(Cog):
     """
     Represents a cog that adds helper functions for use in all other
     scripts.
     """
-    def __init__(self, bot):
-        self.bot = bot
-        self.required = True
-
     async def hashcheck(self, load: bool = True) -> None:
         """
         Checks for any changes in the python scripts and, if any are found,
         updates "hash_dict.json" and syncs the commandtree.
 
         Parameters:
-            bot: commands.bot
-                The bot whose commandtree is being synced
             load: bool
                 If true, load any cogs found
         """
@@ -52,7 +46,7 @@ class Helper(commands.Cog):
                 json.dump(current_hash, f)
             await self.bot.tree.sync(guild = self.bot.guild)
             await self.respond("command tree updated")
-    
+
     async def respond(
             self, msg: str, interaction: discord.Interaction = None) -> None:
         """
@@ -64,20 +58,20 @@ class Helper(commands.Cog):
             interaction: discord.Interaction
                 The discord interaction to respond to
         """
-        try:
-            if interaction is not None:
+        if interaction is not None:
+            try:
                 await interaction.followup.send(msg)
-            print(msg)
-        except discord.HTTPException as e:
-            print(f"HTTP error: {e}")
+            except discord.HTTPException as e:
+                print(f"HTTP error: {e}")
+        print(msg)
 
 
-async def setup(bot: commands.bot) -> None:
+async def setup(bot: Inglewood) -> None:
     """
     The entry point to load this extention.
 
     Parameter:
-        bot : commands.bot
+        bot : Inglewood
             The bot that loads this extension.
     """
     await bot.add_cog(Helper(bot))

@@ -3,18 +3,16 @@ Implements commands for managing discord roles
 """
 
 import discord
-from discord.ext import commands
 
 from constants import CONSTANTS
+from inglewood import Cog, Inglewood
 
-
-class DiscordRoles(commands.Cog):
+class DiscordRoles(Cog):
     """
     Represents a cog that adds commands for managing discord roles.
     """
-    def __init__(self, bot):
-        self.bot = bot
-        self.required = False
+    def __init__(self, bot: Inglewood):
+        super().__init__(bot)
         for command, role in CONSTANTS["toggle_roles"].items():
             self.toggle_role_command_generator(command, role)
         for command, role in CONSTANTS["assign_roles"].items():
@@ -44,23 +42,25 @@ class DiscordRoles(commands.Cog):
         elif role not in user.roles:
             try:
                 await user.add_roles(role)
-                response_string = f"{role_name} role added to {user.name}"
             except discord.HTTPException as e:
                 await self.bot.cogs["Helper"].respond(
                     f"discord.HTTPException: {e}")
                 response_string = (
                     f"couldn't assign the {role_name} role to {user.name}, <@"
                     f"{CONSTANTS["user_id"]}>")
+            else:
+                response_string = f"{role_name} role added to {user.name}"
         elif allow_remove:
             try:
                 await user.remove_roles(role)
-                response_string = f"{role_name} role removed from {user.name}"
             except discord.HTTPException as e:
                 await self.bot.cogs["Helper"].respond(
                     f"discord.HTTPException: {e}")
                 response_string = (
                     f"couldn't remove the {role_name} role from {user.name}, "
                     f"<@{CONSTANTS["user_id"]}>")
+            else:
+                response_string = f"{role_name} role removed from {user.name}"
         else:
             response_string = f"{user.name} already has {role_name} role"
         await self.bot.cogs["Helper"].respond(response_string, interaction)
@@ -128,12 +128,12 @@ class DiscordRoles(commands.Cog):
         func.__name__ = command_name
 
 
-async def setup(bot: commands.bot) -> None:
+async def setup(bot: Inglewood) -> None:
     """
     The entry point to load this extention.
 
     Parameter:
-        bot : commands.bot
+        bot : Inglewood
             The bot that loads this extension.
     """
     await bot.add_cog(DiscordRoles(bot))
