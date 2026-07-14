@@ -51,10 +51,10 @@ CONSTANTS = {
         ___
         },
     #Bot Settings
-    "time_zone": ZoneInfo("Europe/Amsterdam"),
+    "time_zone": ZoneInfo("___"),
     "daily_tier_reset_time": datetime.time(__, __, __, __),
-    "low_tier_block_before": datetime.time(__, __, __, __),
-    "low_tier_block_after": datetime.time(__, __, __, __),
+    "low_tier_block_start": datetime.time(__, __, __, __),
+    "low_tier_block_end": datetime.time(__, __, __, __),
     "server_msg_period": ___,
     #Minecraft Server Addresses
     "domain": "___",
@@ -72,11 +72,10 @@ Then fill in the following values for each of the keys:
 - `user_id`, your Discord user ID as an integer.
 - `toggle_roles`, nested dictionaries containing command names and roles to be toggled.
 - `assign_roles`, nested dictionaries containing command names, roles to be assigned, and the role needed to assign.
-- `time_zone`, your time zone described using the pytz package, for example `pytz.timezone('Europe/London')`.
+- `time_zone`, your time zone described using the pytz package, for example `Europe/London`.
   - A complete list of time zones can be obtained by running `pytz.all_timezones`.
 - `daily_tier_reset_time`, the time of day to reset tier roll mechanics expressed as a datetime.time object.
-- `low_tier_block_before`, the earliest time of day at which low tiers can be rolled in seconds expressed as a datetime.time object.
-- `low_tier_block_after`, the latest time of day at which low tiers can be rolled in seconds expressed as a datetime.time object.
+- `low_tier_block_start` and `low_tier_block_end`, the times of day between which low tiers can not be rolled expressed as a datetime.time object.
 - `server_msg_period`, the time between Minecraft server checks in seconds as an integer.
 - `domain`, the domain or IP addresses of your Minecraft servers as a string.
 - `minecraft_servers`, nested dictionaries containing names, ports, and types of Minecraft servers to be monitored.

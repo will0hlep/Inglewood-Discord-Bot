@@ -9,7 +9,7 @@ import aiohttp
 import discord
 from discord.ext import tasks
 
-from constants import CONSTANTS
+from constants import CONSTANTS as CONST
 from inglewood import Cog, Inglewood
 
 
@@ -22,7 +22,7 @@ class Minecraft(Cog):
         super().__init__(bot)
         self.message = None
         self.server_msg_content = None
-        for server, ports in CONSTANTS["minecraft_servers"].items():
+        for server, ports in CONST["minecraft_servers"].items():
             self.ping_server_command_generator(server, ports)
         self.game_servers_messages_update_loop.start()
 
@@ -51,8 +51,8 @@ class Minecraft(Cog):
             server_string = f"**{server_name}**"
             for server_type, port_dict in ports.items():
                 port = port_dict["port"]
-                domain = CONSTANTS["domain"]
-                client = CONSTANTS["server_types"][server_type]
+                domain = CONST["domain"]
+                client = CONST["server_types"][server_type]
                 server = server_type(domain, port)
                 try:
                     server_response = await server.async_status()
@@ -73,7 +73,7 @@ class Minecraft(Cog):
             response.append(server_string)
         return "\n\n".join(response)
 
-    @tasks.loop(seconds=CONSTANTS["server_msg_period"])
+    @tasks.loop(seconds=CONST["server_msg_period"])
     async def game_servers_messages_update_loop(self) -> None:
         """
         Updates the message in the relavent channel every
@@ -81,7 +81,7 @@ class Minecraft(Cog):
         address information of all specified Minecraft servers
         """
         server_msg = await self.minecraft_server_query(
-            CONSTANTS["minecraft_servers"], False)
+            CONST["minecraft_servers"], False)
         if self.server_msg_content != server_msg:
             try:
                 await self.message.edit(content=server_msg)
@@ -102,7 +102,7 @@ class Minecraft(Cog):
         creates a placeholder.
         """
         await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(CONSTANTS["channel_id"])
+        channel = self.bot.get_channel(CONST["channel_id"])
         while True:
             try:
                 if os.path.exists("message_id.json"):
@@ -129,12 +129,6 @@ class Minecraft(Cog):
                     f"discord.HTTPException: {e}")
         self.server_msg_content = self.message.content
 
-    async def cog_unload(self):
-        """
-        Terminates all looping tasks when unloading this cog.
-        """
-        self.game_servers_messages_update_loop.cancel()
-
     def ping_server_command_generator(self, server: str, ports: dict) -> None:
         """
         Builds discord commands to allow users to ping minecraft servers.
@@ -155,6 +149,12 @@ class Minecraft(Cog):
                 await self.minecraft_server_query({server: ports}))
             await self.bot.cogs["Helper"].respond(response_string, interaction)
         func.__name__ = command_name
+
+    async def cog_unload(self):
+        """
+        Terminates all looping tasks when unloading this cog.
+        """
+        self.game_servers_messages_update_loop.cancel()
 
 
 async def setup(bot: Inglewood) -> None:

@@ -4,7 +4,7 @@ Implements commands for managing discord roles
 
 import discord
 
-from constants import CONSTANTS
+from constants import CONSTANTS as CONST
 from inglewood import Cog, Inglewood
 
 
@@ -14,9 +14,9 @@ class DiscordRoles(Cog):
     """
     def __init__(self, bot: Inglewood):
         super().__init__(bot)
-        for command, role in CONSTANTS["toggle_roles"].items():
+        for command, role in CONST["toggle_roles"].items():
             self.toggle_role_command_generator(command, role)
-        for command, role in CONSTANTS["assign_roles"].items():
+        for command, role in CONST["assign_roles"].items():
             self.assign_role_command_generator(command, role[0], role[1])
 
     async def toggle_role(
@@ -39,7 +39,7 @@ class DiscordRoles(Cog):
         role = discord.utils.get(interaction.guild.roles, name=role_name)
         if role is None:
             response_string = (
-                f"Role '{role_name}' not found <@{CONSTANTS["user_id"]}>")
+                f"Role '{role_name}' not found <@{CONST["user_id"]}>")
         elif role not in user.roles:
             try:
                 await user.add_roles(role)
@@ -48,7 +48,7 @@ class DiscordRoles(Cog):
                     f"discord.HTTPException: {e}")
                 response_string = (
                     f"couldn't assign the {role_name} role to {user.name}, <@"
-                    f"{CONSTANTS["user_id"]}>")
+                    f"{CONST["user_id"]}>")
             else:
                 response_string = f"{role_name} role added to {user.name}"
         elif allow_remove:
@@ -59,7 +59,7 @@ class DiscordRoles(Cog):
                     f"discord.HTTPException: {e}")
                 response_string = (
                     f"couldn't remove the {role_name} role from {user.name}, "
-                    f"<@{CONSTANTS["user_id"]}>")
+                    f"<@{CONST["user_id"]}>")
             else:
                 response_string = f"{role_name} role removed from {user.name}"
         else:
@@ -117,7 +117,7 @@ class DiscordRoles(Cog):
                 interaction.guild.roles, name=required_role)
             if role is None:
                 await self.bot.cogs["Helper"].respond(
-                    f"Role '{role_name}' not found <@{CONSTANTS["user_id"]}>",
+                    f"Role '{role_name}' not found <@{CONST["user_id"]}>",
                     interaction)
             elif role in interaction.user.roles:
                 user = interaction.guild.get_member_named(username)

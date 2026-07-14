@@ -2,7 +2,7 @@
 Implements helper functions.
 """
 
-import hashlib
+from hashlib import sha3_512
 import json
 import os
 import pathlib
@@ -31,20 +31,18 @@ class Helper(Cog):
                 last_hash = json.load(f)
         else:
             last_hash = None
-        current_hash = {}
+        live_hash = {}
         for path in [".", "./cogs"]:
             for file in os.listdir(path):
                 if pathlib.PurePosixPath(file).suffix == ".py":
                     filepath = os.path.join(path,file)
-                    with open(filepath, "rb") as file_to_hash:
-                        data_to_hash = file_to_hash.read()
-                        sha3_512_returned = hashlib.sha3_512(data_to_hash).hexdigest()
-                        current_hash[filepath] = sha3_512_returned
+                    with open(filepath, "rb") as f:
+                        live_hash[filepath] = sha3_512(f.read()).hexdigest()
                     if load and path == "./cogs" and file != "helper.py":
                         await self.bot.load_extension(f"cogs.{file[:-3]}")
-        if current_hash != last_hash:
+        if live_hash != last_hash:
             with open("hash_dict.json", "w", encoding="utf-8") as f:
-                json.dump(current_hash, f)
+                json.dump(live_hash, f)
             await self.bot.tree.sync(guild = self.bot.guild)
             await self.respond("command tree updated")
 

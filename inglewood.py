@@ -9,7 +9,7 @@ import sys
 import discord
 from discord.ext import commands
 
-from constants import CONSTANTS
+from constants import CONSTANTS as CONST
 
 
 class Inglewood(commands.Bot):
@@ -18,7 +18,7 @@ class Inglewood(commands.Bot):
     """
     def __init__(self):
         super().__init__("/",intents=discord.Intents.all())
-        self.guild=discord.Object(CONSTANTS["server_id"])
+        self.guild=discord.Object(CONST["server_id"])
 
         @self.tree.command(name="restart", guild=self.guild)
         async def restart(interaction: discord.Interaction) -> None:
@@ -53,7 +53,7 @@ def main():
     """
     Creates and runs the Inglewood Discord bot.
     """
-    Inglewood().run(CONSTANTS["token"],log_formatter=Formatter("%(message)s"))
+    Inglewood().run(CONST["token"],log_formatter=Formatter("%(message)s"))
 
 
 if __name__ == "__main__":

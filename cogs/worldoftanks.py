@@ -8,18 +8,12 @@ import random
 import discord
 from discord.ext import tasks
 
-from constants import CONSTANTS
+from constants import CONSTANTS as CONST
 from inglewood import Cog, Inglewood
 
-late_cutoff = CONSTANTS["low_tier_block_after"].replace(
-    tzinfo=CONSTANTS["time_zone"])
-early_cutoff = CONSTANTS["low_tier_block_before"].replace(
-    tzinfo=CONSTANTS["time_zone"])
-
-
-def cutoff_check():
-    now = datetime.now(CONSTANTS["time_zone"]).time()
-    return not early_cutoff < now < late_cutoff
+cutoff_start = CONST["low_tier_block_start"].replace(tzinfo=CONST["time_zone"])
+cutoff_end = CONST["low_tier_block_end"].replace(tzinfo=CONST["time_zone"])
+reset_time = CONST["daily_tier_reset_time"].replace(tzinfo=CONST["time_zone"])
 
 
 class WorldofTanks(Cog):
@@ -37,8 +31,6 @@ class WorldofTanks(Cog):
             "random_tiers_iv_plus", "Roll a random tier (IV+)", True)
         self.daily_tier_roll_reset.start()
 
-    reset_time = CONSTANTS["daily_tier_reset_time"]
-    reset_time = reset_time.replace(tzinfo=CONSTANTS["time_zone"])
     @tasks.loop(time=reset_time)
     async def daily_tier_roll_reset(self) -> None:
         """
@@ -49,12 +41,16 @@ class WorldofTanks(Cog):
         self.tier1 = False
         await self.bot.cogs["Helper"].respond(
             "reset daily tier roll variables")
-
-    async def cog_unload(self):
+  
+    def cutoff_check(self):
         """
-        Terminates all looping tasks when unloading this cog.
+        Checks if the current time is within the low tier block period.
         """
-        self.daily_tier_roll_reset.cancel()
+        now = datetime.now(CONST["time_zone"]).time()
+        if cutoff_start <= cutoff_end:
+            return cutoff_start <= now < cutoff_end
+        else:
+            return now >= cutoff_start or now < cutoff_end
 
     def random_tiers_command_generator(
             self, command_name: str, command_description: str,
@@ -80,7 +76,7 @@ class WorldofTanks(Cog):
                 "Wildcard": 2, "I": 1, "II": 1, "III": 1, "IV": 1, "V": 2,
                 "VI": 2, "VII": 2, "VIII": 2, "IX": 2, "X": 2, "XI": 2
             }
-            if battle_pass or cutoff_check():
+            if battle_pass or self.cutoff_check():
                 tiers.update({"I": 0, "II": 0, "III": 0})
             elif self.tier1:
                 tiers["I"] = 0
@@ -91,11 +87,17 @@ class WorldofTanks(Cog):
                 self.tier1 = True
             elif (draw in ["II", "IV", "V", "VI", "VII", "VIII"]
                     and random.random() < 1/30):
-                if draw == "IV" and random.random() < 1/2:
+                if draw in ["IV"] and random.random() < 1/2:
                     draw += " Double"
                 draw += " Preferential"
             await self.bot.cogs["Helper"].respond(draw, interaction)
         func.__name__ = command_name
+
+    async def cog_unload(self):
+        """
+        Terminates all looping tasks when unloading this cog.
+        """
+        self.daily_tier_roll_reset.cancel()
 
 
 async def setup(bot: Inglewood) -> None:
