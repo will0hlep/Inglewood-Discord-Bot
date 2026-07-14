@@ -2,6 +2,7 @@
 This module implements the inglewood discord bot.
 """
 
+from logging import Formatter
 import os
 import sys
 
@@ -52,7 +53,7 @@ def main():
     """
     Creates and runs the Inglewood Discord bot.
     """
-    Inglewood().run(CONSTANTS["token"])
+    Inglewood().run(CONSTANTS["token"],log_formatter=Formatter("%(message)s"))
 
 
 if __name__ == "__main__":

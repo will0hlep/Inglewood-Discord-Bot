@@ -38,8 +38,8 @@ class Helper(Cog):
                     filepath = os.path.join(path,file)
                     with open(filepath, "rb") as file_to_hash:
                         data_to_hash = file_to_hash.read()
-                        md5_returned = hashlib.md5(data_to_hash).hexdigest()
-                        current_hash[filepath] = md5_returned
+                        sha3_512_returned = hashlib.sha3_512(data_to_hash).hexdigest()
+                        current_hash[filepath] = sha3_512_returned
                     if load and path == "./cogs" and file != "helper.py":
                         await self.bot.load_extension(f"cogs.{file[:-3]}")
         if current_hash != last_hash:
