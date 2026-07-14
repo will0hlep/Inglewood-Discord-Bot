@@ -11,6 +11,7 @@ import discord
 
 from inglewood import Cog, Inglewood
 
+
 class Helper(Cog):
     """
     Represents a cog that adds helper functions for use in all other

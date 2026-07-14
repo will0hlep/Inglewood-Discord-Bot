@@ -2,7 +2,7 @@
 Implements commands for managing World of Tanks related commands.
 """
 
-import datetime
+from datetime import datetime
 import random
 
 import discord
@@ -10,6 +10,17 @@ from discord.ext import tasks
 
 from constants import CONSTANTS
 from inglewood import Cog, Inglewood
+
+late_cutoff = CONSTANTS["low_tier_block_after"].replace(
+    tzinfo=CONSTANTS["time_zone"])
+early_cutoff = CONSTANTS["low_tier_block_before"].replace(
+    tzinfo=CONSTANTS["time_zone"])
+
+
+def cutoff_check():
+    now = datetime.now(CONSTANTS["time_zone"]).time()
+    return not early_cutoff < now < late_cutoff
+
 
 class WorldofTanks(Cog):
     """
@@ -60,10 +71,6 @@ class WorldofTanks(Cog):
             battle_pass: bool
                 if True, command will only select from tier IV and up
         """
-        late_cutoff = CONSTANTS["low_tier_block_after"]
-        late_cutoff = late_cutoff.replace(tzinfo=CONSTANTS["time_zone"])
-        early_cutoff = CONSTANTS["low_tier_block_after"]
-        early_cutoff = early_cutoff.replace(tzinfo=CONSTANTS["time_zone"])
         @self.bot.tree.command(
             name=command_name, guild=self.bot.guild,
             description=command_description)
@@ -73,8 +80,7 @@ class WorldofTanks(Cog):
                 "Wildcard": 2, "I": 1, "II": 1, "III": 1, "IV": 1, "V": 2,
                 "VI": 2, "VII": 2, "VIII": 2, "IX": 2, "X": 2, "XI": 2
             }
-            now = datetime.datetime.now(CONSTANTS["time_zone"]).time()
-            if battle_pass or now > late_cutoff or now < early_cutoff:
+            if battle_pass or cutoff_check():
                 tiers.update({"I": 0, "II": 0, "III": 0})
             elif self.tier1:
                 tiers["I"] = 0

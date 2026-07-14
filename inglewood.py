@@ -10,6 +10,7 @@ from discord.ext import commands
 
 from constants import CONSTANTS
 
+
 class Inglewood(commands.Bot):
     """
     Represents a Discord bot.
@@ -23,7 +24,8 @@ class Inglewood(commands.Bot):
             await interaction.response.defer()
             if await self.is_owner(interaction.user):
                 await self.cogs["Helper"].respond("Restarting...", interaction)
-                os.execv(sys.executable, 'python main.py')
+                await self.close()
+                os.execv(sys.executable, ['python', 'inglewood.py'])
             else:
                 await self.cogs["Helper"].respond(
                     f"{interaction.user} attempted restricted command",

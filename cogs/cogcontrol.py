@@ -9,6 +9,7 @@ from discord.ext import commands
 
 from inglewood import Cog, Inglewood
 
+
 class CogControl(Cog):
     """
     Represents a cog that adds commands for managing cogs.

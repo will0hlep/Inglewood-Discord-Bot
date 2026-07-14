@@ -7,6 +7,7 @@ import discord
 from constants import CONSTANTS
 from inglewood import Cog, Inglewood
 
+
 class DiscordRoles(Cog):
     """
     Represents a cog that adds commands for managing discord roles.

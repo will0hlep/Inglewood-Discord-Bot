@@ -2,15 +2,16 @@
 Implements commands for managing Minecraft server related commands.
 """
 
-import asyncio
 import json
 import os
 
+import aiohttp
 import discord
 from discord.ext import tasks
 
 from constants import CONSTANTS
 from inglewood import Cog, Inglewood
+
 
 class Minecraft(Cog):
     """
@@ -19,6 +20,8 @@ class Minecraft(Cog):
     """
     def __init__(self, bot: Inglewood):
         super().__init__(bot)
+        self.message = None
+        self.server_msg_content = None
         for server, ports in CONSTANTS["minecraft_servers"].items():
             self.ping_server_command_generator(server, ports)
         self.game_servers_messages_update_loop.start()
@@ -43,9 +46,9 @@ class Minecraft(Cog):
                 version, address information, and latency information for
                 specified Minecraft servers.
         """
-        response_string = ""
+        response = []
         for server_name, ports in server_dictionary.items():
-            response_string += f"**{server_name}**"
+            server_string = f"**{server_name}**"
             for server_type, port_dict in ports.items():
                 port = port_dict["port"]
                 domain = CONSTANTS["domain"]
@@ -58,17 +61,17 @@ class Minecraft(Cog):
                         await self.bot.cogs["Helper"].respond(
                             f"OSError: {server_name} ({client} {version}): "
                             f"{domain}:{port}, {e}")
-                    response_string += f"\n{client}: Unavailable"
+                    server_string += f"\n{client}: Unavailable"
                 else:
                     version = server_response.version.name
                     version = port_dict.get("Version", version)
-                    response_string += (
+                    server_string += (
                         f"\n{client} {version}: {domain}:{port}")
                     if measure_latency:
-                        response_string += (
+                        server_string += (
                             f" ({server_response.latency:.1f} ms)")
-            response_string += "\n\n"
-        return response_string.rstrip("\n")
+            response.append(server_string)
+        return "\n\n".join(response)
 
     @tasks.loop(seconds=CONSTANTS["server_msg_period"])
     async def game_servers_messages_update_loop(self) -> None:
@@ -76,6 +79,27 @@ class Minecraft(Cog):
         Updates the message in the relavent channel every
         server_msg_period seconds with live online status and web
         address information of all specified Minecraft servers
+        """
+        server_msg = await self.minecraft_server_query(
+            CONSTANTS["minecraft_servers"], False)
+        if self.server_msg_content != server_msg:
+            try:
+                await self.message.edit(content=server_msg)
+            except (discord.HTTPException,
+                    aiohttp.client_exceptions.ClientConnectorDNSError) as e:
+                await self.bot.cogs["Helper"].respond(
+                    f"discord.HTTPException: {e}")
+            else:
+                self.server_msg_content = server_msg
+                await self.bot.cogs["Helper"].respond(
+                    "server message updated")
+
+    @game_servers_messages_update_loop.before_loop
+    async def pre_game_servers_messages_update_loop(self) -> None:
+        """
+        Checkes for an existing game server message, and if one is found
+        updates the current_server_msg and message properties, otherwise
+        creates a placeholder.
         """
         await self.bot.wait_until_ready()
         channel = self.bot.get_channel(CONSTANTS["channel_id"])
@@ -85,7 +109,7 @@ class Minecraft(Cog):
                     with open("message_id.json", "r", encoding="utf-8") as f:
                         message_id = json.load(f)
                     try:
-                        message = await channel.fetch_message(message_id)
+                        self.message = await channel.fetch_message(message_id)
                     except discord.errors.NotFound as e:
                         await self.bot.cogs["Helper"].respond(
                             f"discord.errors.NotFound: {e}")
@@ -95,30 +119,15 @@ class Minecraft(Cog):
                     else:
                         break
                 else:
-                    message = await channel.send("placeholder")
-                    await message.pin()
-                    message_id = message.id
+                    self.message = await channel.send("placeholder")
+                    await self.message.pin()
                     with open("message_id.json", "w", encoding="utf-8") as f:
-                        json.dump(message_id, f)
+                        json.dump(self.message.id, f)
                     break
             except discord.HTTPException as e:
                 await self.bot.cogs["Helper"].respond(
                     f"discord.HTTPException: {e}")
-        current_server_msg = message.content
-        while True:
-            server_msg = await self.minecraft_server_query(
-                CONSTANTS["minecraft_servers"], False)
-            if current_server_msg != server_msg:
-                try:
-                    await message.edit(content=server_msg)
-                except discord.HTTPException as e:
-                    await self.bot.cogs["Helper"].respond(
-                        f"discord.HTTPException: {e}")
-                else:
-                    current_server_msg = server_msg
-                    await self.bot.cogs["Helper"].respond(
-                        "server message updated")
-            await asyncio.sleep(CONSTANTS["server_msg_period"])
+        self.server_msg_content = self.message.content
 
     async def cog_unload(self):
         """
