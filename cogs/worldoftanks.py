@@ -11,9 +11,27 @@ from discord.ext import tasks
 from constants import CONSTANTS as CONST
 from inglewood import Cog, Inglewood
 
-cutoff_start = CONST["low_tier_block_start"].replace(tzinfo=CONST["time_zone"])
-cutoff_end = CONST["low_tier_block_end"].replace(tzinfo=CONST["time_zone"])
-reset_time = CONST["daily_tier_reset_time"].replace(tzinfo=CONST["time_zone"])
+
+def to_gmt(time: datetime.time) -> datetime.time:
+    """
+    Corrects the timezone of a given time to UTC.
+    """
+    return datetime.combine(datetime.today(), time).astimezone().time()
+
+
+def cutoff_check() -> bool:
+    """
+    Checks if the current time is within the low tier block period.
+    """
+    now = datetime.now().time()
+    if cutoff_start <= cutoff_end:
+        return cutoff_start <= now < cutoff_end
+    return now >= cutoff_start or now < cutoff_end
+
+
+cutoff_start = to_gmt(CONST["low_tier_block_start"])
+cutoff_end = to_gmt(CONST["low_tier_block_end"])
+reset_time = to_gmt(CONST["daily_tier_reset_time"])
 
 
 class WorldofTanks(Cog):
@@ -37,20 +55,11 @@ class WorldofTanks(Cog):
         Performs a daily reset of the tier roll mechanics at
         daily_tier_reset_time each day.
         """
-        self.last = None
-        self.tier1 = False
-        await self.bot.cogs["Helper"].respond(
-            "reset daily tier roll variables")
-  
-    def cutoff_check(self):
-        """
-        Checks if the current time is within the low tier block period.
-        """
-        now = datetime.now(CONST["time_zone"]).time()
-        if cutoff_start <= cutoff_end:
-            return cutoff_start <= now < cutoff_end
-        else:
-            return now >= cutoff_start or now < cutoff_end
+        if self.last:
+            self.last = None
+            self.tier1 = False
+            await self.bot.cogs["Helper"].respond(
+                "reset daily tier roll variables")
 
     def random_tiers_command_generator(
             self, command_name: str, command_description: str,
@@ -76,7 +85,7 @@ class WorldofTanks(Cog):
                 "Wildcard": 2, "I": 1, "II": 1, "III": 1, "IV": 1, "V": 2,
                 "VI": 2, "VII": 2, "VIII": 2, "IX": 2, "X": 2, "XI": 2
             }
-            if battle_pass or self.cutoff_check():
+            if battle_pass or cutoff_check():
                 tiers.update({"I": 0, "II": 0, "III": 0})
             elif self.tier1:
                 tiers["I"] = 0
