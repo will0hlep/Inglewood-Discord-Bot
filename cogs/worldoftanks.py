@@ -2,7 +2,7 @@
 Implements commands for managing World of Tanks related commands.
 """
 
-from datetime import datetime
+from datetime import datetime as dt, time, timezone as tz
 import random
 
 import discord
@@ -11,28 +11,11 @@ from discord.ext import tasks
 from constants import CONSTANTS as CONST
 from inglewood import Cog, Inglewood
 
-
-def to_gmt(time: datetime.time) -> datetime.time:
+def local_time(nonlocal_time: dt.time) -> dt.time:
     """
-    Corrects the timezone of a given time to UTC.
+    Corrects the timezone of a given time to local time.
     """
-    return datetime.combine(datetime.today(), time).astimezone().time()
-
-
-def cutoff_check() -> bool:
-    """
-    Checks if the current time is within the low tier block period.
-    """
-    now = datetime.now().time()
-    if cutoff_start <= cutoff_end:
-        return cutoff_start <= now < cutoff_end
-    return now >= cutoff_start or now < cutoff_end
-
-
-cutoff_start = to_gmt(CONST["low_tier_block_start"])
-cutoff_end = to_gmt(CONST["low_tier_block_end"])
-reset_time = to_gmt(CONST["daily_tier_reset_time"])
-
+    return dt.combine(dt.today(), nonlocal_time).astimezone().time()
 
 class WorldofTanks(Cog):
     """
@@ -48,18 +31,29 @@ class WorldofTanks(Cog):
         self.random_tiers_command_generator(
             "random_tiers_iv_plus", "Roll a random tier (IV+)", True)
         self.daily_tier_roll_reset.start()
+        self.cutoff_start = local_time(CONST["low_tier_block_start"])
+        self.cutoff_end = local_time(CONST["low_tier_block_end"])
 
-    @tasks.loop(time=reset_time)
+    @tasks.loop(time=local_time(CONST["daily_tier_reset_time"]))
     async def daily_tier_roll_reset(self) -> None:
         """
         Performs a daily reset of the tier roll mechanics at
         daily_tier_reset_time each day.
         """
-        if self.last:
+        if self.last is not None:
             self.last = None
             self.tier1 = False
             await self.bot.cogs["Helper"].respond(
                 "reset daily tier roll variables")
+
+    def cutoff_check(self) -> bool:
+        """
+        Checks if the current time is within the low tier block period.
+        """
+        now = dt.now().time()
+        if self.cutoff_start <= self.cutoff_end:
+            return self.cutoff_start <= now < self.cutoff_end
+        return now >= self.cutoff_start or now < self.cutoff_end
 
     def random_tiers_command_generator(
             self, command_name: str, command_description: str,
@@ -85,7 +79,7 @@ class WorldofTanks(Cog):
                 "Wildcard": 2, "I": 1, "II": 1, "III": 1, "IV": 1, "V": 2,
                 "VI": 2, "VII": 2, "VIII": 2, "IX": 2, "X": 2, "XI": 2
             }
-            if battle_pass or cutoff_check():
+            if battle_pass or self.cutoff_check():
                 tiers.update({"I": 0, "II": 0, "III": 0})
             elif self.tier1:
                 tiers["I"] = 0
